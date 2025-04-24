@@ -18,6 +18,8 @@ export default function Home() {
       {/* Blog Giriş Bölümü */}
       <section className={styles.blogIntro}>
         <h2>Bloglarım</h2>
+
+        {/* 1. Yazı */}
         <article className={styles.postPreview}>
           <h3>
             <Link href="/blog/blog-yazi-1">
@@ -33,7 +35,27 @@ export default function Home() {
             Bu yazıda sizlerle hem kendimi nasıl geliştirdiğimi hem de bu süreçte edindiğim bazı
             deneyimleri paylaşmak istiyorum. Belki benim yolculuğum, bu alanda ilerlemek isteyen
             başkalarına da ilham olur...
-            <Link href="/blog/blog-yazi-1">Devamını Oku</Link>
+            <Link href="/blog/blog-yazi-1"> Devamını Oku</Link>
+          </p>
+        </article>
+
+        {/* 2. Yazı */}
+        <article className={styles.postPreview}>
+          <h3>
+            <Link href="/blog/akilli-geri-donusum-projesi">
+              Akıllı Geri Dönüşüm Projesi
+            </Link>
+          </h3>
+          <p className={styles.postAuthor}>
+            Yazar: Samet Anaz &amp; Mustafa Güneyli
+          </p>
+          <time dateTime="2022-02-10" className={styles.postDate}>
+          10 Şubat 2022
+          </time>
+          <p className={styles.postExcerpt}>
+            Geri dönüşüm kutularının kullanımını sensör, NFC ve mobil uygulama ile
+            daha etkin hâle getiren bir proje.
+            <Link href="/blog/akilli-geri-donusum-projesi"> Devamını Oku</Link>
           </p>
         </article>
       </section>
