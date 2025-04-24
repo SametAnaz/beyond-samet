@@ -60,3 +60,8 @@
 .content img[src$="kutu.png"] {
   max-width: 150px;
 }
+
+/* diyagram.png */
+.content img[src$="inekwiz_diagram.png"] {
+  max-width: 450px;
+}

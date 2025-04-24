@@ -34,7 +34,7 @@ export default function Home() {
             Merhaba! Ben Samet, şu anda üniversite 3. sınıf Bilgisayar Mühendisliği öğrencisiyim.
             Bu yazıda sizlerle hem kendimi nasıl geliştirdiğimi hem de bu süreçte edindiğim bazı
             deneyimleri paylaşmak istiyorum. Belki benim yolculuğum, bu alanda ilerlemek isteyen
-            başkalarına da ilham olur...
+            başkalarına da ilham olur.
             <Link href="/blog/blog-yazi-1"> Devamını Oku</Link>
           </p>
         </article>
@@ -58,6 +58,29 @@ export default function Home() {
             <Link href="/blog/akilli-geri-donusum-projesi"> Devamını Oku</Link>
           </p>
         </article>
+{/* 3. Yazı */}
+<article className={styles.postPreview}>
+          <h3>
+            <Link href="/blog/inekwiz">
+            Akıllı Tarımın Yeni Yüzü: İnekWiz ile Çiftlikler Dijitalleşiyor
+            </Link>
+          </h3>
+          <p className={styles.postAuthor}>
+            Yazar: Samet Anaz &amp; Ali Emre
+          </p>
+          <time dateTime="2022-02-10" className={styles.postDate}>
+          15 Ekim
+          </time>
+          <p className={styles.postExcerpt}>
+            İnekWiz, çiftliklerdeki ineklerin sağlık ve verimliliğini artırmak için
+            tasarlanmış bir IoT projesidir. Proje, ineklerin sağlık durumunu izlemek
+            ve verimliliklerini artırmak amacıyla çeşitli sensörler ve bir mobil uygulama
+            kullanmaktadır. Bu sayede çiftlik sahipleri, ineklerinin sağlık durumunu
+            anlık olarak takip edebilir ve gerektiğinde müdahale edebilirler.
+            <Link href="/blog/akilli-geri-donusum-projesi"> Devamını Oku</Link>
+          </p>
+        </article>
+
       </section>
     </main>
   );
