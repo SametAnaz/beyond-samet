@@ -22,16 +22,27 @@
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
-.socialLinks a {
-  margin: 0 0.5rem;
-  color: #0D0D0D;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s;
+.socialLinks {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
 }
-
+.socialLink {
+  display: inline-flex;
+  align-items: center;    /* İkona ve yazıya yatay ortalama */
+  gap: 0.25rem;           /* İkon ile metin arası boşluk */
+}
+.socialIcon {
+  display: inline-block;  /* Satır içi konum */
+  width: 18px;
+  height: 18px;
+}
 .socialLinks a:hover {
   color: #526126; /* Dark-Pond-4 */
+}
+.socialIcon {
+  margin-right: 0.5rem;
+  display: block;
 }
 
 .blogIntro {
