@@ -1,0 +1,80 @@
+/* styles/home.module.css */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .hero {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .hero h1 {
+    font-size: 2.75rem;
+    margin-bottom: 0.5rem;
+    color: #222;
+  }
+  
+  .socialLinks {
+    margin-top: 1rem;
+  }
+  
+  .socialLinks a {
+    margin: 0 0.5rem;
+    font-weight: 500;
+    color: #0070f3;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  
+  .socialLinks a:hover {
+    color: #0051a3;
+  }
+  
+  .blogIntro {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .postPreview {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .postPreview:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .postPreview h3 {
+    margin: 0 0 0.5rem;
+  }
+  
+  .postAuthor {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+  }
+  
+  .postDate {
+    display: block;
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 1rem;
+  }
+  
+  .postExcerpt {
+    color: #444;
+    line-height: 1.6;
+    margin-top: 1rem;
+  }
+  
