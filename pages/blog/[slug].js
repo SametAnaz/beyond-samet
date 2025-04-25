@@ -10,14 +10,14 @@ export async function getStaticPaths() {
   const paths = getAllPostSlugs();
   return {
     paths,
-    fallback: false
+    fallback: false,
   };
 }
 
 export async function getStaticProps({ params }) {
   const postData = await getPostData(params.slug);
   return {
-    props: { postData }
+    props: { postData },
   };
 }
 
@@ -25,7 +25,8 @@ export default function Post({ postData }) {
   return (
     <>
       <Head>
-        <title>{postData.title} – Beyond Samet</title>
+        {/* Use a single template string so <title> has a single child */}
+        <title>{`${postData.title} – Beyond Samet`}</title>
       </Head>
       <article className={styles.article}>
         <h1 className={styles.title}>{postData.title}</h1>
@@ -33,7 +34,7 @@ export default function Post({ postData }) {
           {new Date(postData.date).toLocaleDateString("tr-TR", {
             day: "numeric",
             month: "long",
-            year: "numeric"
+            year: "numeric",
           })}
         </div>
         <div
