@@ -1,90 +1,124 @@
 /* styles/blog-post.module.css */
 
-/* Kutu stili: içerik kartı */
-.container {
-  max-width: 700px;
-  margin: 3rem auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* 1) Container kart görünümü */
+.article {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  background-color: var(--surface-color);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  color: var(--text-color);
 }
 
-/* Başlık stili */
-.title {
-  font-size: 2.25rem;
-  margin-bottom: 0.5rem;
-  color: #222;
-  text-align: center;
+/* 2) Başlık stili */
+.article h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--heading-color);
+  line-height: 1.2;
 }
 
-/* Yazar stili */
-.author {
-  font-size: 1rem;
-  color: #555;
-  text-align: center;
+/* 3) Yazar ve tarih */
+.date {
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  margin-bottom: 2rem;
+}
+
+/* 4) İçerik metni */
+.content {
+  line-height: 1.8;
+}
+.content p {
   margin-bottom: 1.5rem;
 }
 
-/* İçerik gövdesi stili */
-.content {
-  line-height: 1.8;
-  color: #444;
+/* 5) Bağlantılar */
+.content a {
+  color: var(--link-color);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+.content a:hover {
+  color: var(--link-hover-color);
 }
 
-/* Tarih stili: içerik sonunda sağa yasla */
-.date {
-  text-align: right;
-  font-size: 0.85rem;
-  color: #777;
+/* 6) Başlık seviyeleri */
+.content h2,
+.content h3,
+.content h4 {
+  color: var(--heading-color);
   margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
 }
 
-/* Genel resim stili: blok, otomatik yükseklik, ortalanmış */
+/* 7) Alıntılar */
+.content blockquote {
+  border-left: 4px solid var(--link-color);
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  background-color: var(--surface-elevated);
+  border-radius: var(--card-radius);
+  font-style: italic;
+}
+
+/* 8) Kod blokları */
+.content pre {
+  background-color: var(--surface-elevated);
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: var(--card-radius);
+  font-size: 0.9rem;
+  margin: 1.5rem 0;
+}
+.content code {
+  background-color: var(--muted-text-color);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* 9) Liste maddeleri */
+.content ul,
+.content ol {
+  margin: 1rem 0 1.5rem 1.5rem;
+}
+.content li {
+  margin-bottom: 0.5rem;
+}
+
+/* 10) Tablolar */
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+.content th,
+.content td {
+  border: 1px solid var(--muted-text-color);
+  padding: 0.75rem;
+  text-align: left;
+}
+.content th {
+  background-color: var(--surface-elevated);
+}
+
+/* 11) Görseller: orijinal genişlikte, ortaya hizalı */
 .content img {
   display: block;
-  max-width: 100%;
+  max-width: 50%;
   height: auto;
-  margin: 1rem auto;
+  margin: 1.5rem auto;
 }
 
-/* logo.png */
-.content img[src$="logo.png"] {
-
-  width: 120px;
-  height: auto;
- 
-}
-
-/* kutu.png için özel genişlik */
-.content img[src$="kutu.png"] {
-  max-width: 150px;
-}
-
-/* diyagram.png */
-.content img[src$="inekwiz_diagram.png"] {
-  max-width: 450px;
-}
-
-/* resim: me1.jpg */
-.content img[src$="me1.jpg"] {
-  float: left;
-  width: 150px;            /* istediğiniz pikseli ayarlayın */
-  height: auto;
-  margin: 0 1rem 1rem 0;    /* üst, sağ, alt, sol */
-}
-
-/*  resim: me2.jpg */
-.content img[src$="me2.jpg"] {
-  float: right;
-  width: 150px;            /* aynı şekilde ayarlanabilir */
-  height: auto;
-  margin: 0 0 1rem 1rem;    /* üst, sağ, alt, sol */
-}
-/* resim: me3.jpg */
-.content img[src$="me3.jpg"] {
-  float: left;
-  width: 170px;            /* istediğiniz pikseli ayarlayın */
-  height: auto;
-  margin: 0 1rem 1rem 0;    /* üst, sağ, alt, sol */
+/* 12) Mobil uyumluluk */
+@media (max-width: 600px) {
+  .article {
+    padding: 1.5rem;
+  }
+  .article h1 {
+    font-size: 2rem;
+  }
 }
