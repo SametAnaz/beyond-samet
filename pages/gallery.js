@@ -19,7 +19,7 @@ export async function getStaticProps() {
 export default function Gallery({ images }) {
   return (
     <section className={styles.container}>
-      <h1>Galeri</h1>
+      <h1 className={styles.title}>Gallery</h1>
       <div className={styles.grid}>
         {images.map(src => (
           <div key={src} className={styles.card}>

@@ -90,7 +90,7 @@ export default function Home() {
         {/* 3. Yazı */}
         <article className={styles.postPreview}>
           <h3>
-            <Link href="/blog/inekwiz-ile-ciftlikler-dijitallesiyor">
+            <Link href="/blog/inekwiz">
               Akıllı Tarımın Yeni Yüzü: İnekWiz ile Çiftlikler Dijitalleşiyor
             </Link>
           </h3>
@@ -106,7 +106,7 @@ export default function Home() {
             ve verimliliklerini artırmak amacıyla çeşitli sensörler ve bir mobil uygulama
             kullanmaktadır. Bu sayede çiftlik sahipleri, ineklerinin sağlık durumunu
             anlık olarak takip edebilir ve gerektiğinde müdahale edebilirler.{" "}
-            <Link href="/blog/inekwiz-ile-ciftlikler-dijitallesiyor">
+            <Link href="/blog/inekwiz">
               Devamını Oku
             </Link>
           </p>

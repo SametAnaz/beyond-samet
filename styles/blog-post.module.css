@@ -65,3 +65,26 @@
 .content img[src$="inekwiz_diagram.png"] {
   max-width: 450px;
 }
+
+/* resim: me1.jpg */
+.content img[src$="me1.jpg"] {
+  float: left;
+  width: 150px;            /* istediğiniz pikseli ayarlayın */
+  height: auto;
+  margin: 0 1rem 1rem 0;    /* üst, sağ, alt, sol */
+}
+
+/*  resim: me2.jpg */
+.content img[src$="me2.jpg"] {
+  float: right;
+  width: 150px;            /* aynı şekilde ayarlanabilir */
+  height: auto;
+  margin: 0 0 1rem 1rem;    /* üst, sağ, alt, sol */
+}
+/* resim: me3.jpg */
+.content img[src$="me3.jpg"] {
+  float: left;
+  width: 170px;            /* istediğiniz pikseli ayarlayın */
+  height: auto;
+  margin: 0 1rem 1rem 0;    /* üst, sağ, alt, sol */
+}
