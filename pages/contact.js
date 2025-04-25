@@ -5,16 +5,30 @@ import styles from "../styles/Contact.module.css";
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+
   const handleChange = e => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
-  const handleSubmit = e => {
+
+  const handleSubmit = async e => {
     e.preventDefault();
-    // Şu anda bir API’ye gönderilmiyor; form verisini altta console’a yazıyoruz
-    console.log("Gönderilen iletişim formu:", form);
-    alert("Mesajınız alındı, teşekkürler!");
-    setForm({ name: "", email: "", message: "" });
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Mesajınız gönderildi! Teşekkürler.");
+        setForm({ name: "", email: "", message: "" });
+      } else {
+        alert("Hata: " + data.message);
+      }
+    } catch {
+      alert("Beklenmeyen bir hata oluştu.");
+    }
   };
 
   return (
@@ -24,43 +38,20 @@ export default function Contact() {
       </Head>
       <main className={styles.container}>
         <h1 className={styles.title}>İletişim</h1>
-        <p className={styles.lead}>
-          Bana aşağıdaki formu doldurarak ulaşabilirsiniz. En kısa sürede dönüş yapacağım.
-        </p>
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.field}>
             <span>İsim</span>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
+            <input name="name" value={form.name} onChange={handleChange} required/>
           </label>
           <label className={styles.field}>
             <span>E-posta</span>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
+            <input name="email" type="email" value={form.email} onChange={handleChange} required/>
           </label>
           <label className={styles.field}>
             <span>Mesajınız</span>
-            <textarea
-              name="message"
-              rows="5"
-              value={form.message}
-              onChange={handleChange}
-              required
-            />
+            <textarea name="message" rows={5} value={form.message} onChange={handleChange} required/>
           </label>
-          <button type="submit" className={styles.button}>
-            Gönder
-          </button>
+          <button type="submit" className={styles.button}>Gönder</button>
         </form>
       </main>
     </>
