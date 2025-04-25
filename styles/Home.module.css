@@ -1,68 +1,75 @@
 /* styles/Home.module.css */
 
+/* 1) Container */
 .container {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
 }
 
+/* 2) Hero Bölümü */
 .hero {
-  background-color: #cac6c6;
-  color: #fff;
-  border-radius: 8px;
+  background-color: var(--surface-elevated);
+  color: var(--text-color);
+  border-radius: var(--card-radius);
   text-align: center;
   padding: 3rem 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--card-shadow);
 }
 
 .hero h1 {
   font-size: 2.75rem;
   margin-bottom: 0.5rem;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+  color: var(--heading-color);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* 3) Sosyal Linkler */
 .socialLinks {
   display: flex;
   justify-content: center;
   gap: 1rem;
 }
+
 .socialLink {
   display: inline-flex;
-  align-items: center;    /* İkona ve yazıya yatay ortalama */
-  gap: 0.25rem;           /* İkon ile metin arası boşluk */
-}
-.socialIcon {
-  display: inline-block;  /* Satır içi konum */
-  width: 18px;
-  height: 18px;
-}
-.socialLinks a:hover {
-  color: #526126; /* Dark-Pond-4 */
-}
-.socialIcon {
-  margin-right: 0.5rem;
-  display: block;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--link-color);
+  transition: color 0.2s ease;
 }
 
+.socialLink:hover {
+  color: var(--link-hover-color);
+}
+
+.socialIcon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* 4) Blog Giriş Başlığı */
 .blogIntro {
   margin-top: 2rem;
 }
 
 .blogIntro h2 {
   font-size: 2rem;
-  color: #0D4A3A; /* Dark-Pond-2 */
-  text-align: left;    /* Sol hizalama */
+  color: var(--heading-color);
+  text-align: left;
   margin-bottom: 1.5rem;
 }
 
+/* 5) Yazı Önizleme Kartı */
 .postPreview {
-  background-color: #5959588e; /* Dark-Pond-1 */
-  border-left: 4px solid #0D4A3A; /* Dark-Pond-2 */
+  background-color: var(--surface-color);
+  border-left: 4px solid var(--link-color);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   border-radius: 4px;
-  color: #033B3D; /* Dark-Pond-1 (text) */
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -72,27 +79,29 @@
 }
 
 .postPreview h3 a {
-  color: #0D4A3A; /* Dark-Pond-2 */
+  color: var(--link-color);
   font-size: 1.25rem;
   text-decoration: none;
 }
 
 .postPreview h3 a:hover {
-  color: #0D0D0D; /* Dark-Pond-4 */
+  color: var(--link-hover-color);
 }
 
+/* 6) Yazar ve Tarih */
 .postAuthor {
   font-size: 0.9rem;
-  color: #0D0D0D; /* Dark-Pond-3 */
+  color: var(--secondary-text-color);
   margin: 0.5rem 0;
 }
 
 .postDate {
   font-size: 0.75rem;
-  color: #0D0D0D; /* Dark-Pond-5 */
+  color: var(--secondary-text-color);
   float: right;
 }
 
+/* 7) Paragraf ve Özet */
 .postExcerpt {
   margin-top: 1rem;
   line-height: 1.6;

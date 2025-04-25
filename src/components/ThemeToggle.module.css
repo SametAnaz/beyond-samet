@@ -1,0 +1,64 @@
+/* ThemeToggle.module.css */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Ana ray */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--muted-text-color);
+  border-radius: 34px;
+  transition: background-color 0.3s ease;
+}
+
+/* Solda ☀️ veya sağda 🌙 göstermek için */
+.slider::before {
+  content: "☀️";
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+/* Kaydırıcı düğme (thumb) */
+.slider::after {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--bg-color);
+  border-radius: 50%;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+/* Checked (dark mode) */
+input:checked + .slider {
+  background-color: var(--link-color);
+}
+
+input:checked + .slider::before {
+  content: "🌙";
+  left: calc(100% - 6px);
+  transform: translate(-100%, -50%);
+}
+
+input:checked + .slider::after {
+  transform: translateX(26px);
+  background-color: var(--surface-color);
+}
