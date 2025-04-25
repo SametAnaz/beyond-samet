@@ -7,7 +7,7 @@ export default function Navbar() {
     <nav className="navbar">
      <ul className="nav-list">
   <li><Link href="/">Anasayfa</Link></li>
-+ <li><Link href="/blog">Blog</Link></li>
+  <li><Link href="/blog">Blog</Link></li>
   <li><Link href="/about">Hakkımda</Link></li>
   <li><Link href="/contact">İletişim</Link></li>
 </ul>
