@@ -1,56 +1,55 @@
 /* styles/About.module.css */
 
 .container {
-    max-width: 700px;
-    margin: 3rem auto;
-    padding: 2rem;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .title {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: #033B3D;
-    text-align: center;
-  }
-  
-  .lead {
-    font-size: 1.125rem;
-    color: #2D5731;
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  
-  .section {
-    margin-bottom: 2rem;
-  }
-  
-  .section h2 {
-    font-size: 1.5rem;
-    color: #0D4A3A;
-    margin-bottom: 0.75rem;
-  }
-  
-  .section p,
-  .section ul {
-    color: #444;
-    line-height: 1.8;
-  }
-  
-  .list {
-    list-style: disc inside;
-    padding-left: 0;
-  }
-  
-  /* local link class for CSS Modules purity */
-  .link {
-    color: #526126; /* Dark-Pond-4 */
-    text-decoration: none;
-  }
-  
-  .link:hover {
-    text-decoration: underline;
-  }
-  
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: var(--surface-elevated);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  color: var(--text-color);
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--heading-color);
+  text-align: center;
+}
+
+.lead {
+  font-size: 1.125rem;
+  color: var(--text-color);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h2 {
+  font-size: 1.5rem;
+  color: var(--heading-color);
+  margin-bottom: 0.75rem;
+}
+
+.section p,
+.section ul {
+  color: var(--text-color);
+  line-height: 1.8;
+}
+
+.list {
+  list-style: disc inside;
+  padding-left: 0;
+}
+
+.link {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
