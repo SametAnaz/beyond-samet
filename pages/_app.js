@@ -6,6 +6,9 @@ import { ThemeProvider } from "next-themes";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export default function App({ Component, pageProps }) {
+  // Contact sayfası mı tespit edelim
+  const isContact = Component.name === "Contact";
+
   return (
     <ThemeProvider
       attribute="class"
@@ -14,7 +17,9 @@ export default function App({ Component, pageProps }) {
       enableColorScheme={true}
     >
       <Layout>
-        <SpeedInsights />
+        {/* Contact sayfasında SpeedInsights'ı atla */}
+        {!isContact && <SpeedInsights />}
+
         <Component {...pageProps} />
       </Layout>
     </ThemeProvider>

@@ -48,3 +48,7 @@
   color: var(--secondary-text-color);
   margin-top: auto;
 }
+
+.giscus-container {
+  margin-top: 3rem;
+}
