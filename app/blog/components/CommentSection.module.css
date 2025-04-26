@@ -72,6 +72,31 @@
   cursor: not-allowed;
 }
 
+.consentBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.consentBox input[type="checkbox"] {
+  margin-top: 0.25rem;
+  width: auto;
+}
+
+.consentBox label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.disclaimer {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
 .commentsList {
   display: flex;
   flex-direction: column;

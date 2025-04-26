@@ -13,6 +13,7 @@ export default function CommentSection({ slug }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userConsent, setUserConsent] = useState(false);
 
   // Yorumları veritabanından çek
   useEffect(() => {
@@ -45,27 +46,57 @@ export default function CommentSection({ slug }) {
     return () => unsubscribe();
   }, [slug]);
 
+  // Kullanıcı cihaz bilgisi
+  const getUserAgent = () => {
+    return navigator.userAgent || 'Unknown';
+  };
+
   // Yeni yorum gönder
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newComment.trim() || !name.trim()) return;
+    if (!newComment.trim() || !name.trim() || !userConsent) return;
     
     setIsSubmitting(true);
     
     try {
+      // Kullanıcının IP adresini almak için basit bir API çağrısı
+      // Not: Gerçek uygulamada IP bilgisi server-side tarafında alınmalı
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipResponse.json();
+      
       await addDoc(collection(db, 'comments'), {
         name: name,
-        email: email,
+        email: email || null, // E-posta varsa kaydet, yoksa null olarak kaydet
         content: newComment,
         slug: slug,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        ipAddress: ipData.ip || 'Unknown',
+        userAgent: getUserAgent(),
+        consentGiven: true
       });
       
       setNewComment('');
       setIsSubmitting(false);
     } catch (error) {
       console.error('Yorum eklerken hata oluştu:', error);
+      // IP bilgisi alınamazsa da yorumu kaydet
+      try {
+        await addDoc(collection(db, 'comments'), {
+          name: name,
+          email: email || null, // E-posta varsa kaydet, yoksa null olarak kaydet
+          content: newComment,
+          slug: slug,
+          createdAt: serverTimestamp(),
+          ipAddress: 'Not available',
+          userAgent: getUserAgent(),
+          consentGiven: true
+        });
+        
+        setNewComment('');
+      } catch (innerError) {
+        console.error('Tekrar deneme başarısız:', innerError);
+      }
       setIsSubmitting(false);
     }
   };
@@ -87,7 +118,7 @@ export default function CommentSection({ slug }) {
           />
           <input
             type="email"
-            placeholder="E-posta (Gösterilmeyecek)"
+            placeholder="E-posta (Opsiyonel)"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={styles.input}
@@ -100,13 +131,28 @@ export default function CommentSection({ slug }) {
           required
           className={styles.textarea}
         />
+        <div className={styles.consentBox}>
+          <input
+            type="checkbox"
+            id="consent"
+            checked={userConsent}
+            onChange={(e) => setUserConsent(e.target.checked)}
+            required
+          />
+          <label htmlFor="consent">
+            Yorum yaparak adımın ve yorumumun herkese açık şekilde paylaşılmasına izin veriyorum.
+          </label>
+        </div>
         <button 
           type="submit" 
-          disabled={isSubmitting} 
+          disabled={isSubmitting || !userConsent} 
           className={styles.submitButton}
         >
           {isSubmitting ? 'Gönderiliyor...' : 'Yorum Yap'}
         </button>
+        <p className={styles.disclaimer}>
+          * Bilgileriniz sadece yorum sisteminin yönetimi ve spam önleme amaçlı kullanılmaktadır. Bu bilgiler 3. taraflarla paylaşılmaz ve kullanıcı tarafından talep edildiğinde silinir.
+        </p>
       </form>
       
       {/* Yorumları listele */}

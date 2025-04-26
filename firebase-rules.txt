@@ -17,9 +17,21 @@ service cloud.firestore {
       allow read: if true;
       
       // Yeni yorum eklemek için gerekli alanlar olmalı
-      allow create: if request.resource.data.keys().hasAll(['name', 'content', 'slug']) 
-                      && request.resource.data.name != '' 
-                      && request.resource.data.content != '';
+      allow create: if 
+        // Gerekli alanlar
+        request.resource.data.keys().hasAll(['name', 'content', 'slug', 'createdAt', 'consentGiven']) 
+        // Boş olmaması gereken alanlar
+        && request.resource.data.name != '' 
+        && request.resource.data.content != ''
+        // Onay verilmiş olmalı
+        && request.resource.data.consentGiven == true
+        // Maksimum uzunluk
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.content.size() <= 2000
+        // E-posta varsa geçerli bir formatta olmalı
+        && (!('email' in request.resource.data) 
+            || request.resource.data.email == null 
+            || request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$'));
       
       // Yorum silme ve güncelleme izni yok
       allow update, delete: if false;
