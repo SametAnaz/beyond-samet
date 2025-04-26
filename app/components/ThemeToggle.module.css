@@ -1,0 +1,33 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.toggle:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.toggle:hover .icon {
+  color: var(--text-primary);
+}
+
+.placeholder {
+  width: 32px;
+  height: 32px;
+} 
