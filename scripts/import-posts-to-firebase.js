@@ -71,7 +71,7 @@ async function importPosts() {
         date: new Date(data.date),
         author: data.author,
         excerpt: data.excerpt,
-        contentHtml: contentHtml,
+        contentHtml: contentHtml || '',  // null veya undefined olmamasını sağla
         updatedAt: new Date()
       };
       

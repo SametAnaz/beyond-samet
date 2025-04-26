@@ -66,7 +66,9 @@ export default async function BlogPost(props) {
 
           <div 
             className={styles.content}
-            dangerouslySetInnerHTML={{ __html: post.contentHtml }} 
+            dangerouslySetInnerHTML={{ 
+              __html: typeof post.contentHtml === 'string' ? post.contentHtml : '' 
+            }} 
           />
         </article>
         
