@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import CommentDetails from '../components/CommentDetails';
 
 export default function AdminComments() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedComment, setSelectedComment] = useState(null);
 
   async function fetchComments() {
     try {
@@ -85,20 +87,17 @@ export default function AdminComments() {
     }
   };
 
-  const handleToggleVisibility = async (comment) => {
+  const handleToggleVisibility = async (commentId, newHiddenState) => {
     try {
-      // Yorum görünürlük durumunu tersine çevir
-      const newHiddenState = !comment.hidden;
-      
-      // Admin API rotasını kullanarak güncelleme
-      const response = await fetch(`/api/comments/update`, {
-        method: 'PUT',
+      // Admin API rotasını kullanarak yorum görünürlüğünü değiştirme işlemi
+      const response = await fetch(`/api/comments/update-visibility`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          commentId: comment.id,
-          data: { hidden: newHiddenState }
+          commentId,
+          hidden: newHiddenState 
         }),
       });
 
@@ -110,24 +109,29 @@ export default function AdminComments() {
       setAlert({
         show: true,
         type: 'success',
-        message: newHiddenState 
-          ? 'Yorum başarıyla gizlendi. Sadece admin tarafından görülebilir.'
-          : 'Yorum başarıyla görünür hale getirildi.'
+        message: `Yorum başarıyla ${newHiddenState ? 'gizlendi' : 'görünür yapıldı'}.`
       });
-      
       fetchComments(); // Listeyi yenile
     } catch (error) {
-      console.error('Yorum görünürlüğü değiştirilirken hata:', error);
+      console.error('Yorum güncellenirken hata:', error);
       setAlert({
         show: true,
         type: 'error',
-        message: error.message || 'Yorum görünürlüğü değiştirilirken bir hata oluştu.'
+        message: error.message || 'Yorum güncellenirken bir hata oluştu.'
       });
     }
   };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleViewDetails = (comment) => {
+    setSelectedComment(comment);
+  };
+
+  const closeDetails = () => {
+    setSelectedComment(null);
   };
 
   return (
@@ -240,8 +244,14 @@ export default function AdminComments() {
                         <td>
                           <div className="flex-center gap-2">
                             <button 
-                              className={`admin-btn btn-sm ${comment.hidden ? 'btn-secondary' : 'btn-warning'}`}
-                              onClick={() => handleToggleVisibility(comment)}
+                              className="admin-btn btn-primary btn-sm"
+                              onClick={() => handleViewDetails(comment)}
+                            >
+                              Detay
+                            </button>
+                            <button 
+                              className="admin-btn btn-secondary btn-sm"
+                              onClick={() => handleToggleVisibility(comment.id, !comment.hidden)}
                             >
                               {comment.hidden ? 'Göster' : 'Gizle'}
                             </button>
@@ -262,6 +272,13 @@ export default function AdminComments() {
           </div>
         )}
       </div>
+      
+      {selectedComment && (
+        <CommentDetails 
+          comment={selectedComment} 
+          onClose={closeDetails} 
+        />
+      )}
     </div>
   );
 } 

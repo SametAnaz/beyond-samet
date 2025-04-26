@@ -198,7 +198,7 @@ export default function CommentSection({ slug }) {
               className={styles.checkbox}
             />
             <label htmlFor="consent" className={styles.checkboxLabel}>
-              Yorumunuzun yayınlanmasını onaylıyorsunuz. IP adresiniz ve tarayıcı bilgileriniz spam kontrolü için kaydedilecektir.
+              Yorum göndererek, içeriğin kontrol edildikten sonra uygun görülmesi halinde yayınlanmasını kabul etmiş oluyorsunuz.
             </label>
           </div>
         </div>
