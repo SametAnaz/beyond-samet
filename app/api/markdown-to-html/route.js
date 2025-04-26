@@ -4,8 +4,6 @@ import html from 'remark-html';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
-import rehypeParse from 'rehype-parse';
-import rehypeStringify from 'rehype-stringify';
 import { unified } from 'unified';
 
 export async function POST(request) {
