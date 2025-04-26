@@ -74,7 +74,7 @@ export default function AdminPosts() {
       setAlert({
         show: true,
         type: 'success',
-        message: 'Blog yazısı başarıyla silindi.'
+        message: 'Blog yazısı başarıyla silindi. Ana sayfada güncellenme 30 dakika içinde gerçekleşecek.'
       });
       fetchPostsDirectly(); // Listeyi yenile
     } catch (error) {
@@ -166,10 +166,10 @@ export default function AdminPosts() {
                 <thead>
                   <tr>
                     <th>Başlık</th>
-                    <th>Yazar</th>
-                    <th>Slug</th>
-                    <th>Tarih</th>
-                    <th>Durum</th>
+                    <th className="hide-mobile">Yazar</th>
+                    <th className="hide-mobile">Slug</th>
+                    <th className="hide-mobile">Tarih</th>
+                    <th className="hide-mobile">Durum</th>
                     <th>İşlemler</th>
                   </tr>
                 </thead>
@@ -189,33 +189,43 @@ export default function AdminPosts() {
                   ) : (
                     posts.map(post => (
                       <tr key={post.id || post.slug}>
-                        <td className="truncate">{post.title}</td>
-                        <td>{post.author}</td>
-                        <td className="truncate">{post.slug || post.id}</td>
-                        <td>{post.formattedDate}</td>
-                        <td>
+                        <td className="truncate">
+                          <div className="mobile-row-info">
+                            <span className="mobile-title">{post.title}</span>
+                            <span className="mobile-meta show-mobile">
+                              {post.author} &bull; {post.formattedDate}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="hide-mobile">{post.author}</td>
+                        <td className="truncate hide-mobile">{post.slug || post.id}</td>
+                        <td className="hide-mobile">{post.formattedDate}</td>
+                        <td className="hide-mobile">
                           <span className="status-published">Yayında</span>
                         </td>
                         <td>
-                          <div className="flex-center gap-2">
+                          <div className="flex-center gap-2 mobile-actions">
                             <Link 
                               href={`/admin/posts/edit/${post.id || post.slug}`}
                               className="admin-btn btn-primary btn-sm"
                             >
-                              Düzenle
+                              <span className="btn-icon">✏️</span>
+                              <span className="btn-text hide-mobile">Düzenle</span>
                             </Link>
                             <Link 
                               href={`/blog/${post.slug || post.id}`}
                               target="_blank"
                               className="admin-btn btn-secondary btn-sm"
                             >
-                              Görüntüle
+                              <span className="btn-icon">👁️</span>
+                              <span className="btn-text hide-mobile">Görüntüle</span>
                             </Link>
                             <button 
                               className="admin-btn btn-danger btn-sm"
                               onClick={() => handleDelete(post.id || post.slug)}
                             >
-                              Sil
+                              <span className="btn-icon">🗑️</span>
+                              <span className="btn-text hide-mobile">Sil</span>
                             </button>
                           </div>
                         </td>

@@ -3,7 +3,7 @@ import styles from '../../../styles/blog/post.module.css';
 import CommentSection from '../components/CommentSection';
 import PostContent from '../components/PostContent';
 
-export const revalidate = 3600; // Her saat verileri yeniden çek
+export const revalidate = 1800; // Her 30 dakikada verileri yeniden çek
 
 export async function generateStaticParams() {
   const paths = await getAllPostSlugs();

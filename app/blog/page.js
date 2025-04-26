@@ -7,7 +7,7 @@ export const metadata = {
   description: 'Yazılım, teknoloji ve kişisel deneyimlerim hakkında blog yazılarım.'
 };
 
-export const revalidate = 3600; // Her saat verileri yeniden çek
+export const revalidate = 1800; // Her 30 dakikada verileri yeniden çek
 
 export default async function BlogPage() {
   const allPosts = await getSortedPostsData();
