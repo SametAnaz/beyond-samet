@@ -32,23 +32,32 @@ export default function ContactPage() {
     setIsSubmitting(true);
     
     try {
-      // Form verilerini işleme almak için bir API çağrısı yapılabilir
-      // Şimdilik fake bir API çağrısı simüle edelim
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // API'ye istek gönder
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const data = await response.json();
       
       setFormStatus({
         submitted: true,
-        success: true,
-        message: 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağım.',
+        success: data.success,
+        message: data.message,
       });
       
-      // Formu sıfırla
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: '',
-      });
+      if (data.success) {
+        // Formu sıfırla
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: '',
+        });
+      }
     } catch (error) {
       setFormStatus({
         submitted: true,

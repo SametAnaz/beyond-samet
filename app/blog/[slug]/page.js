@@ -8,7 +8,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const post = await getPostData(params.slug);
+  const slug = params?.slug;
+  const post = await getPostData(slug);
   return {
     title: post.title,
     description: post.excerpt,
@@ -22,8 +23,9 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function BlogPost({ params }) {
-  const post = await getPostData(params.slug);
+export default async function BlogPost(props) {
+  const slug = props.params?.slug;
+  const post = await getPostData(slug);
   
   const formattedDate = new Date(post.date).toLocaleDateString('tr-TR', {
     day: 'numeric',
@@ -52,7 +54,7 @@ export default async function BlogPost({ params }) {
       
       <div className={styles.divider}></div>
       
-      <CommentSection slug={params.slug} />
+      <CommentSection slug={slug} />
     </div>
   );
 } 

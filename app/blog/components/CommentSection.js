@@ -8,6 +8,7 @@ import styles from './CommentSection.module.css';
 export default function CommentSection({ slug }) {
   const { resolvedTheme } = useTheme();
   const theme = resolvedTheme === 'dark' ? 'dark_dimmed' : 'light';
+  const commentSlug = slug;
 
   // Giscus'un URL parametresi değiştiğinde yeniden yüklenmesi için
   useEffect(() => {
@@ -15,7 +16,7 @@ export default function CommentSection({ slug }) {
     if (iframe) {
       iframe.src = iframe.src;
     }
-  }, [slug]);
+  }, [commentSlug]);
 
   return (
     <section className={styles.comments}>

@@ -14,7 +14,7 @@ export default function AboutPage() {
       <div className={styles.profileSection}>
         <div className={styles.profileImage}>
           <Image
-            src="/assets/images/me1.jpg"
+            src="/assets/images/me4.jpeg"
             alt="Samet Anaz"
             width={200}
             height={200}
