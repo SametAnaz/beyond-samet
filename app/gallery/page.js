@@ -1,4 +1,4 @@
-import styles from './page.module.css';
+import styles from '../../styles/pages/gallery.module.css';
 import Image from 'next/image';
 
 export const metadata = {

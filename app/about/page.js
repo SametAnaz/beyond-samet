@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import styles from './page.module.css';
+import styles from '../../styles/pages/about.module.css';
 
 export const metadata = {
   title: 'Hakkımda',

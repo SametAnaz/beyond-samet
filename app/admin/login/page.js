@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './page.module.css';
+import styles from '../../../styles/admin/page.module.css';
 
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'beyond2025';

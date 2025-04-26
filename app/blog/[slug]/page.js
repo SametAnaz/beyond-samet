@@ -1,6 +1,7 @@
 import { getAllPostSlugs, getPostData } from '@/lib/firebase-posts';
-import styles from './page.module.css';
+import styles from '../../../styles/blog/post.module.css';
 import CommentSection from '../components/CommentSection';
+import PostContent from '../components/PostContent';
 
 export const revalidate = 3600; // Her saat verileri yeniden çek
 
@@ -10,7 +11,9 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const slug = params?.slug;
+  // In Next.js 15, params may be wrapped in a promise
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams.slug;
   
   try {
     const post = await getPostData(slug);
@@ -33,43 +36,55 @@ export async function generateMetadata({ params }) {
   }
 }
 
+// Serialize Firestore data to ensure it's safe to pass to client components
+function serializePost(post) {
+  return {
+    slug: post.slug,
+    title: post.title,
+    author: post.author,
+    content: post.content || '',
+    contentHtml: post.contentHtml || '',
+    excerpt: post.excerpt || '',
+    // Convert date objects to ISO strings
+    date: post.date instanceof Date ? post.date.toISOString() : 
+          new Date(post.date).toISOString(),
+    // Convert updatedAt Timestamp to ISO string if it exists
+    updatedAt: post.updatedAt ? 
+               new Date(post.updatedAt.seconds * 1000).toISOString() : 
+               new Date().toISOString()
+  };
+}
+
+// Main blog post component (Server Component)
 export default async function BlogPost(props) {
-  const slug = props.params?.slug;
+  // In Next.js 15, params may be wrapped in a promise
+  const resolvedParams = await Promise.resolve(props.params);
+  const slug = resolvedParams.slug;
   
   try {
     const post = await getPostData(slug);
+    const serializedPost = serializePost(post);
     
-    const formattedDate = post.date instanceof Date
-      ? post.date.toLocaleDateString('tr-TR', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })
-      : new Date(post.date).toLocaleDateString('tr-TR', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        });
+    const formattedDate = new Date(serializedPost.date).toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
 
     return (
       <div className={styles.container}>
         <article className={styles.article}>
           <header className={styles.header}>
-            <h1 className={styles.title}>{post.title}</h1>
+            <h1 className={styles.title}>{serializedPost.title}</h1>
             <div className={styles.meta}>
-              <span className={styles.author}>{post.author}</span>
-              <time dateTime={post.date instanceof Date ? post.date.toISOString() : new Date(post.date).toISOString()} className={styles.date}>
+              <span className={styles.author}>{serializedPost.author}</span>
+              <time dateTime={serializedPost.date} className={styles.date}>
                 {formattedDate}
               </time>
             </div>
           </header>
 
-          <div 
-            className={styles.content}
-            dangerouslySetInnerHTML={{ 
-              __html: typeof post.contentHtml === 'string' ? post.contentHtml : '' 
-            }} 
-          />
+          <PostContent post={serializedPost} />
         </article>
         
         <div className={styles.divider}></div>

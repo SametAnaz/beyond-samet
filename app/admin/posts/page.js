@@ -2,30 +2,58 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  async function fetchPosts() {
+  async function fetchPostsDirectly() {
     try {
       setLoading(true);
-      const postsQuery = query(collection(db, 'posts'), orderBy('date', 'desc'));
-      const postsSnapshot = await getDocs(postsQuery);
-      const postsList = postsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      // Doğrudan koleksiyondan tüm belgeleri al, sıralama olmadan
+      const postsRef = collection(db, 'posts');
+      const postsSnapshot = await getDocs(postsRef);
+      
+      if (postsSnapshot.empty) {
+        console.log("Koleksiyonda hiç belge yok");
+        setPosts([]);
+        return;
+      }
+      
+      const postsList = postsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log("Blog yazısı:", doc.id, data);
+        
+        // Tarih alanlarını dönüştür
+        let createdAtDate = null;
+        if (data.createdAt) {
+          createdAtDate = new Date(data.createdAt.seconds * 1000);
+        } else if (data.date) {
+          createdAtDate = new Date(data.date.seconds * 1000);
+        }
+        
+        return {
+          id: doc.id,
+          ...data,
+          slug: data.slug || doc.id,
+          title: data.title || 'Başlıksız Yazı',
+          author: data.author || 'Bilinmiyor',
+          formattedDate: createdAtDate ? createdAtDate.toLocaleDateString('tr-TR') : '-'
+        };
+      });
+      
+      console.log("Toplam bulunan blog yazısı:", postsList.length);
       setPosts(postsList);
     } catch (error) {
       console.error('Blog yazıları yüklenirken hata:', error);
       setAlert({
         show: true,
         type: 'error',
-        message: 'Blog yazıları yüklenirken bir hata oluştu.'
+        message: 'Blog yazıları yüklenirken bir hata oluştu: ' + error.message
       });
     } finally {
       setLoading(false);
@@ -33,11 +61,11 @@ export default function AdminPosts() {
   }
 
   useEffect(() => {
-    fetchPosts();
+    fetchPostsDirectly();
   }, []);
 
   const handleDelete = async (postId) => {
-    if (!window.confirm('Bu blog yazısını silmek istediğinize emin misiniz?')) {
+    if (!window.confirm('Bu blog yazısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
       return;
     }
     
@@ -48,9 +76,9 @@ export default function AdminPosts() {
         type: 'success',
         message: 'Blog yazısı başarıyla silindi.'
       });
-      fetchPosts(); // Listeyi yenile
+      fetchPostsDirectly(); // Listeyi yenile
     } catch (error) {
-      console.error('Blog yazısı silinirken hata:', error);
+      console.error('Post silinirken hata:', error);
       setAlert({
         show: true,
         type: 'error',
@@ -59,22 +87,39 @@ export default function AdminPosts() {
     }
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="admin-layout">
-      <div className="admin-sidebar">
+      <div className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="admin-brand">
+          <div className="admin-brand-logo">
+            <div className="admin-brand-icon">B</div>
+            <h1>Beyond Admin</h1>
+          </div>
+          <button className="admin-mobile-toggle" onClick={toggleSidebar}>
+            {sidebarOpen ? '✕' : '☰'}
+          </button>
+        </div>
         <ul className="admin-nav">
+          <div className="admin-nav-section">Ana Menü</div>
           <li>
             <Link href="/admin">
+              <span className="admin-nav-icon">📊</span>
               Dashboard
             </Link>
           </li>
           <li>
             <Link href="/admin/posts" className="active">
+              <span className="admin-nav-icon">📝</span>
               Blog Yazıları
             </Link>
           </li>
           <li>
             <Link href="/admin/comments">
+              <span className="admin-nav-icon">💬</span>
               Yorumlar
             </Link>
           </li>
@@ -82,66 +127,105 @@ export default function AdminPosts() {
       </div>
       
       <div className="admin-content">
-        <div className="flex-between mb-2">
-          <h1>Blog Yazıları</h1>
-          <Link href="/admin/posts/new">
-            <button className="admin-btn btn-primary">Yeni Yazı Ekle</button>
-          </Link>
+        <div className="admin-header">
+          <div className="admin-title">
+            <h1>Blog Yazıları</h1>
+            <p>Tüm blog yazılarınızı burada yönetin</p>
+          </div>
+          <div className="admin-actions">
+            <Link href="/admin/posts/new" className="admin-btn btn-primary">
+              <span>+</span> Yeni Yazı
+            </Link>
+            <button className="admin-btn btn-secondary" onClick={fetchPostsDirectly}>
+              <span>🔄</span> Yenile
+            </button>
+          </div>
         </div>
         
         {alert.show && (
           <div className={`alert ${alert.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+            <span>{alert.type === 'success' ? '✅' : '❌'}</span>
             {alert.message}
           </div>
         )}
         
         {loading ? (
-          <div className="loading">Yükleniyor...</div>
+          <div className="loading">
+            <div className="loading-spinner"></div>
+            <div className="loading-text">Blog yazıları yükleniyor...</div>
+          </div>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Başlık</th>
-                <th>Yazar</th>
-                <th>Tarih</th>
-                <th>Özet</th>
-                <th>İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.length === 0 ? (
-                <tr>
-                  <td colSpan="5" style={{ textAlign: 'center' }}>
-                    Henüz blog yazısı bulunmamaktadır.
-                  </td>
-                </tr>
-              ) : (
-                posts.map(post => (
-                  <tr key={post.id}>
-                    <td className="truncate">{post.title}</td>
-                    <td>{post.author}</td>
-                    <td>
-                      {post.date instanceof Date 
-                        ? post.date.toLocaleDateString('tr-TR')
-                        : new Date(post.date?.seconds * 1000).toLocaleDateString('tr-TR')}
-                    </td>
-                    <td className="truncate">{post.excerpt}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}>
-                      <Link href={`/admin/posts/edit/${post.id}`} style={{ marginRight: '8px' }}>
-                        <button className="admin-btn btn-secondary btn-sm">Düzenle</button>
-                      </Link>
-                      <button 
-                        className="admin-btn btn-danger btn-sm"
-                        onClick={() => handleDelete(post.id)}
-                      >
-                        Sil
-                      </button>
-                    </td>
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <div className="admin-card-title">Tüm Blog Yazıları</div>
+              <div>{posts.length} yazı bulundu</div>
+            </div>
+            
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Başlık</th>
+                    <th>Yazar</th>
+                    <th>Slug</th>
+                    <th>Tarih</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {posts.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>
+                        <div className="flex-col flex-center gap-2">
+                          <span style={{ fontSize: '1.5rem' }}>📝</span>
+                          <div>Henüz blog yazısı bulunmamaktadır.</div>
+                          <Link href="/admin/posts/new" className="admin-btn btn-primary btn-sm mt-4">
+                            Yeni Yazı Oluştur
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    posts.map(post => (
+                      <tr key={post.id || post.slug}>
+                        <td className="truncate">{post.title}</td>
+                        <td>{post.author}</td>
+                        <td className="truncate">{post.slug || post.id}</td>
+                        <td>{post.formattedDate}</td>
+                        <td>
+                          <span className="status-published">Yayında</span>
+                        </td>
+                        <td>
+                          <div className="flex-center gap-2">
+                            <Link 
+                              href={`/admin/posts/edit/${post.id || post.slug}`}
+                              className="admin-btn btn-primary btn-sm"
+                            >
+                              Düzenle
+                            </Link>
+                            <Link 
+                              href={`/blog/${post.slug || post.id}`}
+                              target="_blank"
+                              className="admin-btn btn-secondary btn-sm"
+                            >
+                              Görüntüle
+                            </Link>
+                            <button 
+                              className="admin-btn btn-danger btn-sm"
+                              onClick={() => handleDelete(post.id || post.slug)}
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
     </div>

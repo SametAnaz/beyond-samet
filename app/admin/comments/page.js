@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export default function AdminComments() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function fetchComments() {
     try {
@@ -19,7 +20,8 @@ export default function AdminComments() {
       
       const commentsList = commentsSnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        hidden: doc.data().hidden || false,
       }));
       
       // Client tarafında sıralama
@@ -53,7 +55,20 @@ export default function AdminComments() {
     }
     
     try {
-      await deleteDoc(doc(db, 'comments', commentId));
+      // Admin API rotasını kullanarak yorum silme işlemi
+      const response = await fetch(`/api/comments/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ commentId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Yorum silinirken bir hata oluştu');
+      }
+      
       setAlert({
         show: true,
         type: 'success',
@@ -65,27 +80,85 @@ export default function AdminComments() {
       setAlert({
         show: true,
         type: 'error',
-        message: 'Yorum silinirken bir hata oluştu.'
+        message: error.message || 'Yorum silinirken bir hata oluştu.'
       });
     }
   };
 
+  const handleToggleVisibility = async (comment) => {
+    try {
+      // Yorum görünürlük durumunu tersine çevir
+      const newHiddenState = !comment.hidden;
+      
+      // Admin API rotasını kullanarak güncelleme
+      const response = await fetch(`/api/comments/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          commentId: comment.id,
+          data: { hidden: newHiddenState }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Yorum güncellenirken bir hata oluştu');
+      }
+      
+      setAlert({
+        show: true,
+        type: 'success',
+        message: newHiddenState 
+          ? 'Yorum başarıyla gizlendi. Sadece admin tarafından görülebilir.'
+          : 'Yorum başarıyla görünür hale getirildi.'
+      });
+      
+      fetchComments(); // Listeyi yenile
+    } catch (error) {
+      console.error('Yorum görünürlüğü değiştirilirken hata:', error);
+      setAlert({
+        show: true,
+        type: 'error',
+        message: error.message || 'Yorum görünürlüğü değiştirilirken bir hata oluştu.'
+      });
+    }
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="admin-layout">
-      <div className="admin-sidebar">
+      <div className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="admin-brand">
+          <div className="admin-brand-logo">
+            <div className="admin-brand-icon">B</div>
+            <h1>Beyond Admin</h1>
+          </div>
+          <button className="admin-mobile-toggle" onClick={toggleSidebar}>
+            {sidebarOpen ? '✕' : '☰'}
+          </button>
+        </div>
         <ul className="admin-nav">
+          <div className="admin-nav-section">Ana Menü</div>
           <li>
             <Link href="/admin">
+              <span className="admin-nav-icon">📊</span>
               Dashboard
             </Link>
           </li>
           <li>
             <Link href="/admin/posts">
+              <span className="admin-nav-icon">📝</span>
               Blog Yazıları
             </Link>
           </li>
           <li>
             <Link href="/admin/comments" className="active">
+              <span className="admin-nav-icon">💬</span>
               Yorumlar
             </Link>
           </li>
@@ -93,62 +166,100 @@ export default function AdminComments() {
       </div>
       
       <div className="admin-content">
-        <h1>Yorumlar</h1>
+        <div className="admin-header">
+          <div className="admin-title">
+            <h1>Yorumlar</h1>
+            <p>Blog yazılarına yapılan yorumları yönetin</p>
+          </div>
+          <div className="admin-actions">
+            <button className="admin-btn btn-primary" onClick={fetchComments}>
+              <span>🔄</span> Yenile
+            </button>
+          </div>
+        </div>
         
         {alert.show && (
           <div className={`alert ${alert.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+            <span>{alert.type === 'success' ? '✅' : '❌'}</span>
             {alert.message}
           </div>
         )}
         
         {loading ? (
-          <div className="loading">Yükleniyor...</div>
+          <div className="loading">
+            <div className="loading-spinner"></div>
+            <div className="loading-text">Yorumlar yükleniyor...</div>
+          </div>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>İsim</th>
-                <th>E-posta</th>
-                <th>Blog Yazısı</th>
-                <th>IP Adresi</th>
-                <th>Tarih</th>
-                <th>Yorum</th>
-                <th>İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comments.length === 0 ? (
-                <tr>
-                  <td colSpan="7" style={{ textAlign: 'center' }}>
-                    Henüz yorum bulunmamaktadır.
-                  </td>
-                </tr>
-              ) : (
-                comments.map(comment => (
-                  <tr key={comment.id}>
-                    <td>{comment.name}</td>
-                    <td>{comment.email || '-'}</td>
-                    <td className="truncate">{comment.slug}</td>
-                    <td>{comment.ipAddress || '-'}</td>
-                    <td>
-                      {comment.createdAt 
-                        ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('tr-TR')
-                        : '-'}
-                    </td>
-                    <td className="truncate">{comment.content}</td>
-                    <td>
-                      <button 
-                        className="admin-btn btn-danger btn-sm"
-                        onClick={() => handleDelete(comment.id)}
-                      >
-                        Sil
-                      </button>
-                    </td>
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <div className="admin-card-title">Tüm Yorumlar</div>
+              <div>{comments.length} yorum bulundu</div>
+            </div>
+            
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>İsim</th>
+                    <th>E-posta</th>
+                    <th>Blog Yazısı</th>
+                    <th>Tarih</th>
+                    <th>Yorum</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {comments.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                        <div className="flex-col flex-center gap-2">
+                          <span style={{ fontSize: '1.5rem' }}>💬</span>
+                          <div>Henüz yorum bulunmamaktadır.</div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    comments.map(comment => (
+                      <tr key={comment.id} className={comment.hidden ? 'hidden-row' : ''}>
+                        <td>{comment.name}</td>
+                        <td>{comment.email || '-'}</td>
+                        <td className="truncate">{comment.slug}</td>
+                        <td>
+                          {comment.createdAt 
+                            ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('tr-TR')
+                            : '-'}
+                        </td>
+                        <td className="truncate">{comment.content}</td>
+                        <td>
+                          <span className={comment.hidden ? 'status-hidden' : 'status-visible'}>
+                            {comment.hidden ? 'Gizli' : 'Görünür'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="flex-center gap-2">
+                            <button 
+                              className={`admin-btn btn-sm ${comment.hidden ? 'btn-secondary' : 'btn-warning'}`}
+                              onClick={() => handleToggleVisibility(comment)}
+                            >
+                              {comment.hidden ? 'Göster' : 'Gizle'}
+                            </button>
+                            <button 
+                              className="admin-btn btn-danger btn-sm"
+                              onClick={() => handleDelete(comment.id)}
+                            >
+                              Sil
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
     </div>

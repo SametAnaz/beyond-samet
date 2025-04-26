@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import styles from './ThemeToggle.module.css';
+import styles from '../../styles/components/ThemeToggle.module.css';
 
 export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);

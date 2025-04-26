@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getSortedPostsData } from '@/lib/posts';
-import styles from './page.module.css';
+import styles from '../styles/pages/home.module.css';
 
 export const metadata = {
   title: 'Ana Sayfa',

@@ -1,171 +1,230 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
-import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
-import styles from './CommentSection.module.css';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import styles from '../../../styles/blog/CommentSection.module.css';
 
 export default function CommentSection({ slug }) {
-  const { resolvedTheme } = useTheme();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [userConsent, setUserConsent] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Yorumları veritabanından çek
   useEffect(() => {
-    const commentsRef = collection(db, 'comments');
-    
-    // İndeks oluşturulana kadar geçici çözüm: sıralama işlemini kaldırıyoruz
-    const q = query(
-      commentsRef,
-      where('slug', '==', slug)
-      // orderBy('createdAt', 'desc') - indeks oluşturulana kadar bunu kaldırıyoruz
-    );
+    const fetchComments = async () => {
+      try {
+        // Şu an için orderBy'ı kaldırıyoruz, daha sonra indeks oluşturulunca eklenebilir
+        const q = query(
+          collection(db, 'comments'),
+          where('slug', '==', slug)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedComments = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Only display non-hidden comments to regular users
+          if (!data.hidden) {
+            fetchedComments.push({
+              id: doc.id,
+              ...data
+            });
+          }
+        });
+        
+        // Client-side tarihe göre sıralama
+        fetchedComments.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            return b.createdAt.seconds - a.createdAt.seconds;
+          }
+          return 0;
+        });
+        
+        setComments(fetchedComments);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    };
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      // Yorumları client tarafında sıralayalım
-      const commentsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })).sort((a, b) => {
-        // Eğer timestamp varsa, ona göre sırala
-        if (a.createdAt && b.createdAt) {
-          return b.createdAt.seconds - a.createdAt.seconds;
-        }
-        // createdAt yoksa, varsayılan olarak son eklenen en üstte olsun
-        return -1;
-      });
-      
-      setComments(commentsData);
-    });
-
-    return () => unsubscribe();
+    fetchComments();
   }, [slug]);
 
-  // Kullanıcı cihaz bilgisi
   const getUserAgent = () => {
-    return navigator.userAgent || 'Unknown';
+    return {
+      browser: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform
+    };
   };
 
-  // Yeni yorum gönder
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newComment.trim() || !name.trim() || !userConsent) return;
+    if (!newComment.trim() || !name.trim()) {
+      setError('İsim ve yorum alanları zorunludur.');
+      return;
+    }
     
-    setIsSubmitting(true);
-    
+    if (!userConsent) {
+      setError('Devam etmek için şartları kabul etmeniz gerekmektedir.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
     try {
-      // Kullanıcının IP adresini almak için basit bir API çağrısı
-      // Not: Gerçek uygulamada IP bilgisi server-side tarafında alınmalı
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
-      const ipData = await ipResponse.json();
+      // IP adresini al
+      let ipData = { ip: 'unknown' };
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        ipData = await ipResponse.json();
+      } catch (error) {
+        console.error('IP adresi alınamadı:', error);
+      }
+
+      const userAgentData = getUserAgent();
       
-      await addDoc(collection(db, 'comments'), {
-        name: name,
-        email: email || null, // E-posta varsa kaydet, yoksa null olarak kaydet
-        content: newComment,
-        slug: slug,
-        createdAt: serverTimestamp(),
-        ipAddress: ipData.ip || 'Unknown',
-        userAgent: getUserAgent(),
-        consentGiven: true
+      // Server API'sini kullan (Doğrudan client tarafında yazmak yerine)
+      const response = await fetch('/api/comments/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim() || null,
+          content: newComment.trim(),
+          slug: slug,
+          ipAddress: ipData.ip,
+          userAgent: userAgentData,
+        }),
       });
       
-      setNewComment('');
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error('Yorum eklerken hata oluştu:', error);
-      // IP bilgisi alınamazsa da yorumu kaydet
-      try {
-        await addDoc(collection(db, 'comments'), {
-          name: name,
-          email: email || null, // E-posta varsa kaydet, yoksa null olarak kaydet
-          content: newComment,
-          slug: slug,
-          createdAt: serverTimestamp(),
-          ipAddress: 'Not available',
-          userAgent: getUserAgent(),
-          consentGiven: true
-        });
-        
-        setNewComment('');
-      } catch (innerError) {
-        console.error('Tekrar deneme başarısız:', innerError);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Yorum eklenirken bir hata oluştu');
       }
-      setIsSubmitting(false);
+
+      setNewComment('');
+      setName('');
+      setEmail('');
+      setUserConsent(false);
+      setSuccess('Yorumunuz başarıyla gönderildi. İncelendikten sonra yayınlanacaktır.');
+      
+      // Yeni yorumu ekle (normalde backend işlemi olmalı)
+      setTimeout(() => {
+        window.location.reload(); // Sayfayı yenile
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      setError(error.message || 'Yorumunuz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  // Clear error when user starts typing
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value);
+    if (error) setError('');
+  };
+
   return (
-    <section className={styles.comments}>
-      <h2 className={styles.title}>Yorumlar</h2>
+    <div className={styles.commentSection}>
+      <h3 className={styles.commentTitle}>Yorumlar ({comments.length})</h3>
       
-      {/* Yorum formu */}
       <form onSubmit={handleSubmit} className={styles.commentForm}>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label htmlFor="name" className={styles.label}>İsim *</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={handleInputChange(setName)}
+              placeholder="İsminiz"
+              required
+              disabled={submitting}
+              className={styles.input}
+            />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label htmlFor="email" className={styles.label}>E-posta (opsiyonel)</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={handleInputChange(setEmail)}
+              placeholder="E-posta adresiniz"
+              disabled={submitting}
+              className={styles.input}
+            />
+          </div>
+        </div>
+        
         <div className={styles.formGroup}>
-          <input
-            type="text"
-            placeholder="Adınız"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+          <label htmlFor="comment" className={styles.label}>Yorum *</label>
+          <textarea
+            id="comment"
+            value={newComment}
+            onChange={handleInputChange(setNewComment)}
+            placeholder="Düşüncelerinizi paylaşın..."
             required
-            className={styles.input}
-          />
-          <input
-            type="email"
-            placeholder="E-posta (Opsiyonel)"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={styles.input}
+            disabled={submitting}
+            className={styles.textarea}
+            rows={4}
           />
         </div>
-        <textarea
-          placeholder="Yorumunuzu yazın..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          required
-          className={styles.textarea}
-        />
-        <div className={styles.consentBox}>
-          <input
-            type="checkbox"
-            id="consent"
-            checked={userConsent}
-            onChange={(e) => setUserConsent(e.target.checked)}
-            required
-          />
-          <label htmlFor="consent">
-            Yorum yaparak adımın ve yorumumun herkese açık şekilde paylaşılmasına izin veriyorum.
-          </label>
+        
+        <div className={styles.formGroup}>
+          <div className={styles.checkboxGroup}>
+            <input
+              type="checkbox"
+              id="consent"
+              checked={userConsent}
+              onChange={(e) => {
+                setUserConsent(e.target.checked);
+                if (error) setError('');
+              }}
+              disabled={submitting}
+              className={styles.checkbox}
+            />
+            <label htmlFor="consent" className={styles.checkboxLabel}>
+              Yorumunuzun yayınlanmasını onaylıyorsunuz. IP adresiniz ve tarayıcı bilgileriniz spam kontrolü için kaydedilecektir.
+            </label>
+          </div>
         </div>
-        <button 
-          type="submit" 
-          disabled={isSubmitting || !userConsent} 
+        
+        {error && <div className={styles.errorMessage}>{error}</div>}
+        {success && <div className={styles.successMessage}>{success}</div>}
+        
+        <button
+          type="submit"
+          disabled={submitting}
           className={styles.submitButton}
         >
-          {isSubmitting ? 'Gönderiliyor...' : 'Yorum Yap'}
+          {submitting ? 'Gönderiliyor...' : 'Yorum Gönder'}
         </button>
-        <p className={styles.disclaimer}>
-          * Bilgileriniz sadece yorum sisteminin yönetimi ve spam önleme amaçlı kullanılmaktadır. Bu bilgiler 3. taraflarla paylaşılmaz ve kullanıcı tarafından talep edildiğinde silinir.
-        </p>
       </form>
       
-      {/* Yorumları listele */}
-      <div className={styles.commentsList}>
+      <div className={styles.commentList}>
         {comments.length === 0 ? (
           <p className={styles.noComments}>Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
         ) : (
-          comments.map(comment => (
-            <div key={comment.id} className={styles.commentItem}>
+          comments.map((comment) => (
+            <div key={comment.id} className={styles.comment}>
               <div className={styles.commentHeader}>
                 <h4 className={styles.commentAuthor}>{comment.name}</h4>
                 <span className={styles.commentDate}>
-                  {comment.createdAt ? new Date(comment.createdAt.toDate()).toLocaleDateString('tr-TR') : 'Şimdi'}
+                  {comment.createdAt && new Date(comment.createdAt.seconds * 1000).toLocaleDateString('tr-TR')}
                 </span>
               </div>
               <p className={styles.commentContent}>{comment.content}</p>
@@ -173,6 +232,6 @@ export default function CommentSection({ slug }) {
           ))
         )}
       </div>
-    </section>
+    </div>
   );
 } 

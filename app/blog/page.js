@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getSortedPostsData } from '@/lib/firebase-posts';
-import styles from './page.module.css';
+import styles from '../../styles/pages/blog.module.css';
 
 export const metadata = {
   title: 'Blog',

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import ThemeToggle from './ThemeToggle';
-import styles from './Navbar.module.css';
+import styles from '../../styles/components/Navbar.module.css';
 
 export default function Navbar() {
   const pathname = usePathname();
