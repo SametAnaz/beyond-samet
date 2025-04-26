@@ -35,6 +35,12 @@
   /* Kart gölge ve radius */
   --card-radius: 8px;
   --card-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  /* Yorum sistemi için değişkenler */
+  --input-bg: #ffffff;
+  --comment-bg: #f8f9fa;
+  --accent-hover: #0056b3;
+  --accent-disabled: #6c757d;
 }
 
 .dark {
@@ -69,6 +75,12 @@
   --muted-text-color: #555555;
 
   --card-shadow: 0 4px 12px rgba(0,0,0,0.7);
+
+  /* Yorum sistemi için değişkenler */
+  --input-bg: #2d2d2d;
+  --comment-bg: #1e1e1e;
+  --accent-hover: #0077cc;
+  --accent-disabled: #495057;
 }
 
 /* 2) Global reset ve genel stil */
