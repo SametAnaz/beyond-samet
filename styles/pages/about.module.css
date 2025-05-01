@@ -115,6 +115,66 @@
   text-decoration: underline;
 }
 
+/* CV Container Styles */
+.cvContainer {
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.cvContent {
+  max-width: 550px;
+  margin: 0 auto;
+}
+
+.cvTitle {
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.cvText {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.downloadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-color);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.downloadButton:hover {
+  background-color: var(--accent-color-dark, #0056b3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.downloadButton:active {
+  transform: translateY(0);
+}
+
+.downloadIcon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
 @media (max-width: 768px) {
   .profileSection {
     flex-direction: column;
