@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { getSortedPostsData } from '@/lib/firebase-posts';
-import styles from '../../styles/pages/blog.module.css';
+import { getPaginatedPosts } from '@/lib/firebase-posts';
+import styles from '@/styles/pages/blog.module.css';
+import Pagination from '@/app/components/Pagination';
 
 export const metadata = {
   title: 'Blog',
@@ -9,9 +10,14 @@ export const metadata = {
 
 export const revalidate = 1800; // Her 30 dakikada verileri yeniden çek
 
-export default async function BlogPage() {
-  const allPosts = await getSortedPostsData();
-
+export default async function BlogPage({ searchParams }) {
+  // Sayfa numarasını URL parametrelerinden al veya varsayılan 1 kullan
+  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
+  const POSTS_PER_PAGE = 5; // Sayfa başına gösterilecek yazı sayısı
+  
+  // Sayfalandırılmış blog yazılarını al
+  const { posts, totalPosts } = await getPaginatedPosts(currentPage, POSTS_PER_PAGE);
+  
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -22,10 +28,10 @@ export default async function BlogPage() {
       </header>
 
       <div className={styles.blogList}>
-        {allPosts.length === 0 ? (
+        {posts.length === 0 ? (
           <p className={styles.noPosts}>Henüz blog yazısı bulunmamaktadır.</p>
         ) : (
-          allPosts.map((post) => (
+          posts.map((post) => (
             <article key={post.slug} className={styles.blogItem}>
               <Link href={`/blog/${post.slug}`} className={styles.blogLink}>
                 <div className={styles.blogContent}>
@@ -55,6 +61,16 @@ export default async function BlogPage() {
           ))
         )}
       </div>
+      
+      {/* Sayfalandırma bileşeni - toplam yazı sayısı 0'dan büyükse göster */}
+      {totalPosts > 0 && (
+        <Pagination 
+          totalItems={totalPosts} 
+          itemsPerPage={POSTS_PER_PAGE} 
+          currentPage={currentPage}
+          path="/blog"
+        />
+      )}
     </div>
   );
 } 

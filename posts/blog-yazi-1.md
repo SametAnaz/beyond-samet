@@ -11,7 +11,7 @@ Merhaba! Ben Samet, şu anda üniversite 3. sınıf Bilgisayar Mühendisliği ö
 ![Samet Anaz](/assets/images/me1.jpg)
 
 ### Merakla Başlayan Yolculuk  
-Bilgisayarlara ve teknolojiye olan ilgim çocuk yaşlarda başladı ama bu ilgiyi bir mesleğe dönüştürmek fikri üniversiteye adım attığımda şekillendi. İlk yıllarda aldığımız temel dersler — programlama, algoritmalar, veri yapıları — bana bu alanın ne kadar derin ve sınırsız olduğunu gösterdi. Ve işte o noktada, “Sadece okul yeterli değil” düşüncesi zihnime yerleşti.
+Bilgisayarlara ve teknolojiye olan ilgim çocuk yaşlarda başladı ama bu ilgiyi bir mesleğe dönüştürmek fikri üniversiteye adım attığımda şekillendi. İlk yıllarda aldığımız temel dersler — programlama, algoritmalar, veri yapıları — bana bu alanın ne kadar derin ve sınırsız olduğunu gösterdi. Ve işte o noktada, "Sadece okul yeterli değil" düşüncesi zihnime yerleşti.
 
 ![Proje Görseli](/assets/images/me2.jpg)
 
@@ -19,7 +19,7 @@ Bilgisayarlara ve teknolojiye olan ilgim çocuk yaşlarda başladı ama bu ilgiy
 Üniversitede öğrendiklerimin yanı sıra, boş zamanlarımı yeni teknolojiler keşfetmeye, online kurslar izlemeye ve küçük projeler geliştirmeye ayırıyorum. Python, JavaScript gibi dillerde kendimi geliştirdim, şu sıralar React ve Node.js üzerinde çalışıyorum. Bir şeyleri kendi başına öğrenmek bazen zorlayıcı olabiliyor ama sonuçlar kesinlikle buna değer.
 
 ### Projeler ve Deneyimler  
-Gerçek dünya problemleriyle uğraşmak bambaşka bir tecrübe. Bu yüzden fırsat buldukça küçük çaplı projeler geliştiriyorum. Basit bir “To-Do” uygulamasından, API entegrasyonlarına kadar çeşitli projelerde yer aldım. Ayrıca açık kaynak dünyasına da ilgi duyuyorum ve GitHub üzerinden katkı sağlamaya başladım.
+Gerçek dünya problemleriyle uğraşmak bambaşka bir tecrübe. Bu yüzden fırsat buldukça küçük çaplı projeler geliştiriyorum. Basit bir "To-Do" uygulamasından, API entegrasyonlarına kadar çeşitli projelerde yer aldım. Ayrıca açık kaynak dünyasına da ilgi duyuyorum ve GitHub üzerinden katkı sağlamaya başladım.
 
 ![Gelecek:D](/assets/images/me3.jpg)
 
