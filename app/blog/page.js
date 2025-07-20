@@ -47,7 +47,8 @@ export default async function BlogPage({ searchParams }) {
   const POSTS_PER_PAGE = 5; // Sayfa başına gösterilecek yazı sayısı
   
   // MySQL API'den blog yazılarını al
-  const { posts, pagination } = await getPosts(currentPage, POSTS_PER_PAGE);
+  const data = await getPosts(currentPage, POSTS_PER_PAGE);
+  const { posts, totalPosts, totalPages } = data;
   
   return (
     <div className={styles.container}>
@@ -87,9 +88,9 @@ export default async function BlogPage({ searchParams }) {
       </div>
       
       {/* Sayfalandırma bileşeni - toplam yazı sayısı 0'dan büyükse göster */}
-      {pagination.totalPosts > 0 && (
+      {totalPosts > 0 && (
         <Pagination 
-          totalItems={pagination.totalPosts} 
+          totalItems={totalPosts} 
           itemsPerPage={POSTS_PER_PAGE} 
           currentPage={currentPage}
           path="/blog"
