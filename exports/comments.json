@@ -1,0 +1,79 @@
+[
+  {
+    "id": "0IqvvvVeRhKUoRiBeTda",
+    "email": "ydirektasy@gmail.com",
+    "location": {
+      "city": "Çaycuma",
+      "region": "Zonguldak Province",
+      "country": "TR"
+    },
+    "ipAddress": "151.135.177.241",
+    "hidden": false,
+    "slug": "blog-yazi-1",
+    "createdAt": "2025-05-04T18:58:39.341Z",
+    "name": "YSD",
+    "content": ".",
+    "userAgent": {
+      "language": "en-GB",
+      "platform": "iPhone",
+      "browser": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1"
+    },
+    "updatedAt": null
+  },
+  {
+    "id": "7dhe9iRZqsSzMz66G1hI",
+    "hidden": true,
+    "slug": "blog-yazi-1",
+    "createdAt": "2025-04-26T07:46:12.206Z",
+    "email": "sametanax@gmail.com",
+    "name": "Samet",
+    "content": ":D",
+    "updatedAt": null
+  },
+  {
+    "id": "Ap3rF96W1b9cPCQmr5tp",
+    "createdAt": "2025-04-26T12:33:47.976Z",
+    "slug": "blog-yazi-1",
+    "content": "Bu çocuk çok başarılı dediği taktikleri uyguladım bir şeyler biliyor gibi",
+    "hidden": false,
+    "ipAddress": "141.196.37.149",
+    "name": "Melo",
+    "email": "melesudebulut@gmail.com",
+    "userAgent": {
+      "browser": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1",
+      "language": "tr-TR",
+      "platform": "iPhone"
+    },
+    "updatedAt": null
+  },
+  {
+    "id": "NEHrlhAU5NgirrOMc08F",
+    "name": "Ali",
+    "createdAt": "2025-04-26T08:13:33.943Z",
+    "content": "Öncelikle takım arkadaşım olduğun için teşekkür ederim. Bu süreçte gösterdiğin özveri ve katkılarla, birlikte gerçekten verimli ve öğretici bir deneyim yaşadık. Sayende hem teknik anlamda hem de ekip çalışması konusunda kendimize çok şey kattık. Bu yolculukta seninle aynı takımda yer almak benim için büyük bir şanstı. Tüm emeklerin için tekrar teşekkür eder, başarılarının daima artarak devam etmesini dilerim.",
+    "slug": "inekwiz",
+    "email": "ali_emre21@erdogan.edu.tr",
+    "updatedAt": null
+  },
+  {
+    "id": "NN12Kr9PzvHracc8Blc0",
+    "email": null,
+    "createdAt": "2025-07-05T08:49:52.639Z",
+    "name": "Bilinmeyen Kullanıcı",
+    "slug": "blog-yazi-1",
+    "hidden": false,
+    "location": {
+      "country": "TR",
+      "region": "Konya",
+      "city": "Konya"
+    },
+    "userAgent": {
+      "language": "tr-TR",
+      "browser": "Mozilla/5.0 (Linux; Android 13; Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/138.0.7204.139 Mobile Safari/537.36 Instagram 387.1.0.34.85 Android (33/13; 440dpi; 1080x2307; Xiaomi/Redmi; unknown; viva; mt6781; tr_TR; 756711717)",
+      "platform": "Linux aarch64"
+    },
+    "ipAddress": "151.135.133.119",
+    "content": "<3",
+    "updatedAt": null
+  }
+]

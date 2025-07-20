@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import styles from '../../../styles/blog/CommentSection.module.css';
 
 export default function CommentSection({ slug }) {
@@ -18,220 +16,180 @@ export default function CommentSection({ slug }) {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        // Şu an için orderBy'ı kaldırıyoruz, daha sonra indeks oluşturulunca eklenebilir
-        const q = query(
-          collection(db, 'comments'),
-          where('slug', '==', slug)
-        );
-        const querySnapshot = await getDocs(q);
-        
-        const fetchedComments = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          // Only display non-hidden comments to regular users
-          if (!data.hidden) {
-            fetchedComments.push({
-              id: doc.id,
-              ...data
-            });
-          }
-        });
-        
-        // Client-side tarihe göre sıralama
-        fetchedComments.sort((a, b) => {
-          if (a.createdAt && b.createdAt) {
-            return b.createdAt.seconds - a.createdAt.seconds;
-          }
-          return 0;
-        });
-        
-        setComments(fetchedComments);
+        const response = await fetch(`/api/comments?slug=${slug}`);
+        if (response.ok) {
+          const data = await response.json();
+          setComments(data.comments || []);
+        } else {
+          console.error('Yorumlar yüklenirken hata:', response.statusText);
+        }
       } catch (error) {
-        console.error('Error fetching comments:', error);
+        console.error('Yorumlar yüklenirken hata:', error);
       }
     };
 
-    fetchComments();
+    if (slug) {
+      fetchComments();
+    }
   }, [slug]);
-
-  const getUserAgent = () => {
-    return {
-      browser: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform
-    };
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newComment.trim() || !name.trim()) {
-      setError('İsim ve yorum alanları zorunludur.');
+    if (!userConsent) {
+      setError('Lütfen kişisel verilerin işlenmesine onay verin.');
       return;
     }
-    
-    if (!userConsent) {
-      setError('Devam etmek için şartları kabul etmeniz gerekmektedir.');
+
+    if (!name.trim() || !newComment.trim()) {
+      setError('Lütfen isim ve yorum alanlarını doldurun.');
       return;
     }
 
     setSubmitting(true);
     setError('');
+    setSuccess('');
 
     try {
-      // IP adresini al
-      let ipData = { ip: 'unknown' };
-      try {
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
-        ipData = await ipResponse.json();
-      } catch (error) {
-        console.error('IP adresi alınamadı:', error);
-      }
-
-      const userAgentData = getUserAgent();
-      
-      // Server API'sini kullan (Doğrudan client tarafında yazmak yerine)
       const response = await fetch('/api/comments/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          slug,
           name: name.trim(),
-          email: email.trim() || null,
+          email: email.trim(),
           content: newComment.trim(),
-          slug: slug,
-          ipAddress: ipData.ip,
-          userAgent: userAgentData,
         }),
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Yorum eklenirken bir hata oluştu');
-      }
 
-      setNewComment('');
-      setName('');
-      setEmail('');
-      setUserConsent(false);
-      setSuccess('Yorumunuz başarıyla gönderildi. İncelendikten sonra yayınlanacaktır.');
-      
-      // Yeni yorumu ekle (normalde backend işlemi olmalı)
-      setTimeout(() => {
-        window.location.reload(); // Sayfayı yenile
-      }, 2000);
-      
+      if (response.ok) {
+        setSuccess('Yorumunuz başarıyla gönderildi! Onaylandıktan sonra görüntülenecektir.');
+        setNewComment('');
+        setName('');
+        setEmail('');
+        setUserConsent(false);
+        
+        // Yorumları yeniden yükle
+        const fetchResponse = await fetch(`/api/comments?slug=${slug}`);
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json();
+          setComments(data.comments || []);
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Yorum gönderilirken bir hata oluştu.');
+      }
     } catch (error) {
-      console.error('Error submitting comment:', error);
-      setError(error.message || 'Yorumunuz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+      console.error('Yorum gönderme hatası:', error);
+      setError('Yorum gönderilirken bir hata oluştu.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Clear error when user starts typing
-  const handleInputChange = (setter) => (e) => {
-    setter(e.target.value);
-    if (error) setError('');
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
     <div className={styles.commentSection}>
-      <h3 className={styles.commentTitle}>Yorumlar ({comments.length})</h3>
+      <h3 className={styles.title}>Yorumlar ({comments.length})</h3>
       
+      {/* Yorum Formu */}
       <form onSubmit={handleSubmit} className={styles.commentForm}>
-        <div className={styles.formRow}>
-          <div className={styles.formGroup}>
-            <label htmlFor="name" className={styles.label}>İsim *</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={handleInputChange(setName)}
-              placeholder="İsminiz"
-              required
-              disabled={submitting}
-              className={styles.input}
-            />
-          </div>
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="email" className={styles.label}>E-posta (opsiyonel)</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={handleInputChange(setEmail)}
-              placeholder="E-posta adresiniz"
-              disabled={submitting}
-              className={styles.input}
-            />
-          </div>
-        </div>
-        
         <div className={styles.formGroup}>
-          <label htmlFor="comment" className={styles.label}>Yorum *</label>
-          <textarea
-            id="comment"
-            value={newComment}
-            onChange={handleInputChange(setNewComment)}
-            placeholder="Düşüncelerinizi paylaşın..."
+          <label htmlFor="name">İsim *</label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Adınız"
             required
-            disabled={submitting}
-            className={styles.textarea}
-            rows={4}
+            className={styles.input}
           />
         </div>
         
         <div className={styles.formGroup}>
-          <div className={styles.checkboxGroup}>
-            <input
-              type="checkbox"
-              id="consent"
-              checked={userConsent}
-              onChange={(e) => {
-                setUserConsent(e.target.checked);
-                if (error) setError('');
-              }}
-              disabled={submitting}
-              className={styles.checkbox}
-            />
-            <label htmlFor="consent" className={styles.checkboxLabel}>
-              Yorum göndererek, içeriğin kontrol edildikten sonra uygun görülmesi halinde yayınlanmasını kabul etmiş oluyorsunuz.
-            </label>
-          </div>
+          <label htmlFor="email">E-posta (isteğe bağlı)</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="E-posta adresiniz"
+            className={styles.input}
+          />
         </div>
         
-        {error && <div className={styles.errorMessage}>{error}</div>}
-        {success && <div className={styles.successMessage}>{success}</div>}
+        <div className={styles.formGroup}>
+          <label htmlFor="comment">Yorum *</label>
+          <textarea
+            id="comment"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Yorumunuzu yazın..."
+            rows="4"
+            required
+            className={styles.textarea}
+          />
+        </div>
         
-        <button
-          type="submit"
-          disabled={submitting}
+        <div className={styles.checkboxGroup}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={userConsent}
+              onChange={(e) => setUserConsent(e.target.checked)}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkboxText}>
+              Kişisel verilerimin bu yorum sistemi için işlenmesine onay veriyorum.
+            </span>
+          </label>
+        </div>
+        
+        {error && <div className={styles.error}>{error}</div>}
+        {success && <div className={styles.success}>{success}</div>}
+        
+        <button 
+          type="submit" 
+          disabled={submitting || !userConsent}
           className={styles.submitButton}
         >
           {submitting ? 'Gönderiliyor...' : 'Yorum Gönder'}
         </button>
       </form>
       
-      <div className={styles.commentList}>
+      {/* Yorumlar Listesi */}
+      <div className={styles.commentsContainer}>
         {comments.length === 0 ? (
           <p className={styles.noComments}>Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
         ) : (
           comments.map((comment) => (
             <div key={comment.id} className={styles.comment}>
               <div className={styles.commentHeader}>
-                <h4 className={styles.commentAuthor}>{comment.name}</h4>
+                <span className={styles.commentAuthor}>{comment.name}</span>
                 <span className={styles.commentDate}>
-                  {comment.createdAt && new Date(comment.createdAt.seconds * 1000).toLocaleDateString('tr-TR')}
+                  {formatDate(comment.created_at)}
                 </span>
               </div>
-              <p className={styles.commentContent}>{comment.content}</p>
+              <div className={styles.commentContent}>
+                {comment.comment}
+              </div>
             </div>
           ))
         )}
       </div>
     </div>
   );
-} 
+}

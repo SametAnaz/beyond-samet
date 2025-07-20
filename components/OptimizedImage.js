@@ -7,9 +7,9 @@ import styles from '@/styles/blog/post.module.css';
 export default function OptimizedImage({ src, alt, width, height, className }) {
   const [isLoading, setLoading] = useState(true);
 
-  // Varsayılan width ve height değerleri
-  const imgWidth = width || 800;
-  const imgHeight = height || 450;
+  // Varsayılan width ve height değerleri - %50 küçük
+  const imgWidth = width || 400; // 800 -> 400
+  const imgHeight = height || 225; // 450 -> 225
 
   return (
     <div className={`${styles.optimizedImageContainer} ${className || ''}`}>

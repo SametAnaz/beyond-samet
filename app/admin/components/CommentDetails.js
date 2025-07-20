@@ -8,11 +8,11 @@ export default function CommentDetails({ comment, onClose }) {
   
   if (!comment) return null;
   
-  const formatDate = (timestamp) => {
-    if (!timestamp) return 'Bilinmiyor';
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Bilinmiyor';
     
     try {
-      const date = new Date(timestamp.seconds * 1000);
+      const date = new Date(dateString);
       return date.toLocaleDateString('tr-TR', {
         day: 'numeric',
         month: 'long',

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { getPaginatedPosts } from '@/lib/firebase-posts';
 import styles from '@/styles/pages/blog.module.css';
 import Pagination from '@/app/components/Pagination';
 
@@ -8,15 +7,36 @@ export const metadata = {
   description: 'Yazılım, teknoloji ve kişisel deneyimlerim hakkında blog yazılarım.'
 };
 
-export const revalidate = 1800; // Her 30 dakikada verileri yeniden çek
+export const revalidate = 5; // Her 5 saniyede verileri yeniden çek
+
+// MySQL API'den veri çek
+async function getPosts(page = 1, limit = 5) {
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/posts?page=${page}&limit=${limit}&published=true`, {
+      next: { revalidate: 5 } // 5 saniyede bir yenile
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return { posts: [], pagination: { totalPosts: 0, totalPages: 0, currentPage: 1 } };
+  }
+}
 
 export default async function BlogPage({ searchParams }) {
+  // Next.js 15'te searchParams'ı await etmemiz gerekiyor
+  const resolvedSearchParams = await searchParams;
+  
   // Sayfa numarasını URL parametrelerinden al veya varsayılan 1 kullan
-  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
+  const currentPage = resolvedSearchParams?.page ? parseInt(resolvedSearchParams.page) : 1;
   const POSTS_PER_PAGE = 5; // Sayfa başına gösterilecek yazı sayısı
   
-  // Sayfalandırılmış blog yazılarını al
-  const { posts, totalPosts } = await getPaginatedPosts(currentPage, POSTS_PER_PAGE);
+  // MySQL API'den blog yazılarını al
+  const { posts, pagination } = await getPosts(currentPage, POSTS_PER_PAGE);
   
   return (
     <div className={styles.container}>
@@ -38,19 +58,12 @@ export default async function BlogPage({ searchParams }) {
                   <h2 className={styles.blogTitle}>{post.title}</h2>
                   <div className={styles.blogMeta}>
                     <span className={styles.blogAuthor}>{post.author}</span>
-                    <time dateTime={post.date instanceof Date ? post.date.toISOString() : new Date(post.date).toISOString()} className={styles.blogDate}>
-                      {post.date instanceof Date
-                        ? post.date.toLocaleDateString('tr-TR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })
-                        : new Date(post.date).toLocaleDateString('tr-TR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })
-                      }
+                    <time dateTime={new Date(post.createdAt).toISOString()} className={styles.blogDate}>
+                      {new Date(post.createdAt).toLocaleDateString('tr-TR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
                     </time>
                   </div>
                   <p className={styles.blogExcerpt}>{post.excerpt}</p>
@@ -63,9 +76,9 @@ export default async function BlogPage({ searchParams }) {
       </div>
       
       {/* Sayfalandırma bileşeni - toplam yazı sayısı 0'dan büyükse göster */}
-      {totalPosts > 0 && (
+      {pagination.totalPosts > 0 && (
         <Pagination 
-          totalItems={totalPosts} 
+          totalItems={pagination.totalPosts} 
           itemsPerPage={POSTS_PER_PAGE} 
           currentPage={currentPage}
           path="/blog"

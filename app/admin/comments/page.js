@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import CommentDetails from '../components/CommentDetails';
 
 export default function AdminComments() {
@@ -16,25 +14,14 @@ export default function AdminComments() {
   async function fetchComments() {
     try {
       setLoading(true);
-      // Normalde orderBy('createdAt', 'desc') kullanılmalı ancak indeks gerektirebilir
-      const commentsQuery = query(collection(db, 'comments'));
-      const commentsSnapshot = await getDocs(commentsQuery);
+      const response = await fetch('/api/admin/comments');
+      const data = await response.json();
       
-      const commentsList = commentsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        hidden: doc.data().hidden || false,
-      }));
-      
-      // Client tarafında sıralama
-      commentsList.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return b.createdAt.seconds - a.createdAt.seconds;
-        }
-        return 0;
-      });
-      
-      setComments(commentsList);
+      if (data.success) {
+        setComments(data.comments);
+      } else {
+        throw new Error(data.error || 'Yorumlar alınamadı');
+      }
     } catch (error) {
       console.error('Yorumlar yüklenirken hata:', error);
       setAlert({
@@ -87,9 +74,9 @@ export default function AdminComments() {
     }
   };
 
-  const handleToggleVisibility = async (commentId, newHiddenState) => {
+  const handleToggleVisibility = async (commentId, newApprovalState) => {
     try {
-      // Admin API rotasını kullanarak yorum görünürlüğünü değiştirme işlemi
+      // Admin API rotasını kullanarak yorum onay durumunu değiştirme işlemi
       const response = await fetch(`/api/comments/update-visibility`, {
         method: 'POST',
         headers: {
@@ -97,7 +84,7 @@ export default function AdminComments() {
         },
         body: JSON.stringify({ 
           commentId,
-          hidden: newHiddenState 
+          approved: newApprovalState 
         }),
       });
 
@@ -109,7 +96,7 @@ export default function AdminComments() {
       setAlert({
         show: true,
         type: 'success',
-        message: `Yorum başarıyla ${newHiddenState ? 'gizlendi' : 'görünür yapıldı'}.`
+        message: `Yorum başarıyla ${newApprovalState === 1 ? 'onaylandı' : 'beklemeye alındı'}.`
       });
       fetchComments(); // Listeyi yenile
     } catch (error) {
@@ -164,6 +151,12 @@ export default function AdminComments() {
             <Link href="/admin/comments" className="active">
               <span className="admin-nav-icon">💬</span>
               Yorumlar
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/gallery">
+              <span className="admin-nav-icon">🖼️</span>
+              Galeri
             </Link>
           </li>
         </ul>
@@ -226,19 +219,19 @@ export default function AdminComments() {
                     </tr>
                   ) : (
                     comments.map(comment => (
-                      <tr key={comment.id} className={comment.hidden ? 'hidden-row' : ''}>
+                      <tr key={comment.id} className={comment.approved === 0 ? 'hidden-row' : ''}>
                         <td>{comment.name}</td>
                         <td>{comment.email || '-'}</td>
                         <td className="truncate">{comment.slug}</td>
                         <td>
                           {comment.createdAt 
-                            ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('tr-TR')
+                            ? new Date(comment.createdAt).toLocaleDateString('tr-TR')
                             : '-'}
                         </td>
                         <td className="truncate">{comment.content}</td>
                         <td>
-                          <span className={comment.hidden ? 'status-hidden' : 'status-visible'}>
-                            {comment.hidden ? 'Gizli' : 'Görünür'}
+                          <span className={comment.approved === 0 ? 'status-hidden' : 'status-visible'}>
+                            {comment.approved === 0 ? 'Bekliyor' : 'Onaylandı'}
                           </span>
                         </td>
                         <td>
@@ -251,9 +244,9 @@ export default function AdminComments() {
                             </button>
                             <button 
                               className="admin-btn btn-secondary btn-sm"
-                              onClick={() => handleToggleVisibility(comment.id, !comment.hidden)}
+                              onClick={() => handleToggleVisibility(comment.id, comment.approved === 1 ? 0 : 1)}
                             >
-                              {comment.hidden ? 'Göster' : 'Gizle'}
+                              {comment.approved === 0 ? 'Onayla' : 'Beklet'}
                             </button>
                             <button 
                               className="admin-btn btn-danger btn-sm"

@@ -1,0 +1,16 @@
+{
+  "exportDate": "2025-07-20T16:15:20.624Z",
+  "totalPosts": 3,
+  "totalComments": 5,
+  "postsFile": "exports/posts.json",
+  "commentsFile": "exports/comments.json",
+  "postsExample": {
+    "id": "akilli-geri-donusum-projesi",
+    "title": "Akıllı Geri Dönüşüm Projesi"
+  },
+  "commentsExample": {
+    "id": "0IqvvvVeRhKUoRiBeTda",
+    "name": "YSD",
+    "slug": "blog-yazi-1"
+  }
+}

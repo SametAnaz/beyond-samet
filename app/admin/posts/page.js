@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState([]);
@@ -14,34 +12,33 @@ export default function AdminPosts() {
   async function fetchPostsDirectly() {
     try {
       setLoading(true);
-      // Doğrudan koleksiyondan tüm belgeleri al, sıralama olmadan
-      const postsRef = collection(db, 'posts');
-      const postsSnapshot = await getDocs(postsRef);
       
-      if (postsSnapshot.empty) {
-        console.log("Koleksiyonda hiç belge yok");
+      // MySQL API'den tüm post'ları al
+      const response = await fetch('/api/posts', {
+        cache: 'no-store'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Postlari yuklerken hata olustu');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.posts || data.posts.length === 0) {
+        console.log("Hiç blog yazısı bulunamadı");
         setPosts([]);
         return;
       }
       
-      const postsList = postsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        console.log("Blog yazısı:", doc.id, data);
+      const postsList = data.posts.map(post => {
+        console.log("Blog yazısı:", post.id, post);
         
-        // Tarih alanlarını dönüştür
-        let createdAtDate = null;
-        if (data.createdAt) {
-          createdAtDate = new Date(data.createdAt.seconds * 1000);
-        } else if (data.date) {
-          createdAtDate = new Date(data.date.seconds * 1000);
-        }
+        // Tarih formatla
+        const createdAtDate = post.createdAt ? new Date(post.createdAt) : null;
         
         return {
-          id: doc.id,
-          ...data,
-          slug: data.slug || doc.id,
-          title: data.title || 'Başlıksız Yazı',
-          author: data.author || 'Bilinmiyor',
+          id: post.id,
+          ...post,
           formattedDate: createdAtDate ? createdAtDate.toLocaleDateString('tr-TR') : '-'
         };
       });
@@ -70,11 +67,19 @@ export default function AdminPosts() {
     }
     
     try {
-      await deleteDoc(doc(db, 'posts', postId));
+      // MySQL API ile sil
+      const response = await fetch(`/api/posts?id=${postId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Post silinirken hata olustu');
+      }
+      
       setAlert({
         show: true,
         type: 'success',
-        message: 'Blog yazısı başarıyla silindi. Ana sayfada güncellenme 30 dakika içinde gerçekleşecek.'
+        message: 'Blog yazısı başarıyla silindi.'
       });
       fetchPostsDirectly(); // Listeyi yenile
     } catch (error) {
@@ -121,6 +126,12 @@ export default function AdminPosts() {
             <Link href="/admin/comments">
               <span className="admin-nav-icon">💬</span>
               Yorumlar
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/gallery">
+              <span className="admin-nav-icon">🖼️</span>
+              Galeri
             </Link>
           </li>
         </ul>

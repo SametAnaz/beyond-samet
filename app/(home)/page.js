@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { getSortedPostsData } from '@/lib/firebase-posts';
 import styles from '../../styles/pages/home.module.css';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -15,10 +14,18 @@ export default function Home() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const postsData = await getSortedPostsData();
-        setPosts(postsData.slice(0, 3)); // İlk 3 yazıyı al
+        // MySQL API'sinden blog yazılarını al
+        const response = await fetch('/api/posts?limit=3');
+        if (response.ok) {
+          const data = await response.json();
+          setPosts(data.posts || []); // posts array'ini çıkar
+        } else {
+          console.error("Blog yazıları yüklenirken hata:", response.statusText);
+          setPosts([]); // Hata durumunda boş array
+        }
       } catch (error) {
         console.error("Blog yazıları yüklenirken hata:", error);
+        setPosts([]); // Hata durumunda boş array
       } finally {
         setLoading(false);
       }
@@ -27,104 +34,71 @@ export default function Home() {
     fetchPosts();
   }, []);
 
-  // Eğer sayfa tamamen unmount olduğunda, herhangi bir state güncellemesi
-  // yapılmasını engellemek için cleanup function
-  useEffect(() => {
-    return () => {
-      setHoveredPost(null);
-      setPosts([]);
-    };
-  }, []);
-
   return (
     <div className={styles.container}>
-      {/* Hero Bölümü */}
+      {/* Hero Section */}
       <section className={styles.hero}>
-        <div className={styles.heroContent}>
-          <h1>Samet Anaz</h1>
-          <p className={styles.subtitle}>
-            Bilgisayar Mühendisliği Öğrencisi & Yazılım Geliştirici
-          </p>
-          <div className={styles.socialLinks}>
-            <a
-              href="https://github.com/SametAnaz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.socialLink}
-              aria-label="GitHub Profile"
-            >
-              <Image
-                src="/assets/images/github-mark.png"
-                alt="GitHub"
-                width={20}
-                height={20}
-                className={styles.socialIcon}
-              />
-              GitHub
-            </a>
-            <a
-              href="https://www.linkedin.com/in/samet-anaz-995349291/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.socialLink}
-              aria-label="LinkedIn Profile"
-            >
-              <Image
-                src="/assets/images/linkedin-logo.png"
-                alt="LinkedIn"
-                width={20}
-                height={20}
-                className={styles.socialIcon}
-              />
-              LinkedIn
-            </a>
+        <motion.div 
+          className={styles.heroContent}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className={styles.heroText}>
+            <h1 className={styles.heroTitle}>
+              Merhaba, Ben <span className={styles.accent}>Samet</span>
+            </h1>
+            <p className={styles.heroDescription}>
+              Bilgisayar Mühendisliği öğrencisiyim. Web geliştirme, yazılım mühendisliği 
+              ve teknoloji konularında çalısıyorum ve blog yazıları yazıyorum.
+            </p>
+            <div className={styles.heroButtons}>
+              <p>
+              <Link href="/about" className={styles.primaryBtn}>
+                Hakkımda
+              </Link>
+              </p>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Blog Yazıları Bölümü */}
       <section className={styles.blogSection}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Son Yazılarım</h2>
-          <Link href="/blog" className={styles.viewAll}>
-            Tüm Yazılar
+          <h2 className={styles.sectionTitle}>Son Blog Yazıları</h2>
+          <Link href="/blog" className={styles.viewAllLink}>
+            Tümünü Gör
           </Link>
         </div>
-
+        
         <div className={styles.blogGrid}>
           {loading ? (
-            <div className={styles.loading}>Yazılar yükleniyor...</div>
-          ) : posts.length === 0 ? (
-            <div className={styles.noPost}>Henüz yazı bulunmuyor.</div>
-          ) : (
-            posts.map((post, index) => (
+            <p className={styles.loading}>Blog yazıları yükleniyor...</p>
+          ) : posts && posts.length > 0 ? (
+            posts.map((post) => (
               <motion.article 
-                key={`post-${post.slug}-${index}`} 
+                key={post.slug} 
                 className={styles.blogCard}
-                initial={{ scale: 1 }}
-                whileHover={{ 
-                  scale: 1.05,
-                  transition: { duration: 0.3 } 
-                }}
-                onHoverStart={() => setHoveredPost(post.slug)}
-                onHoverEnd={() => setHoveredPost(null)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                whileHover={{ y: -5 }}
+                onMouseEnter={() => setHoveredPost(post.slug)}
+                onMouseLeave={() => setHoveredPost(null)}
               >
                 <Link href={`/blog/${post.slug}`} className={styles.blogLink}>
                   <h3 className={styles.blogTitle}>{post.title}</h3>
                   <p className={styles.blogMeta}>
                     <span className={styles.authorName}>{post.author}</span>
                     <span className={styles.blogDate}>
-                      {post.date instanceof Date 
-                        ? post.date.toLocaleDateString('tr-TR', {
+                      {post.createdAt 
+                        ? new Date(post.createdAt).toLocaleDateString('tr-TR', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
                           })
-                        : new Date(post.date).toLocaleDateString('tr-TR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })
+                        : 'Tarih bilinmiyor'
                       }
                     </span>
                   </p>
@@ -140,29 +114,19 @@ export default function Home() {
                     animate={{ 
                       opacity: 1, 
                       y: 0,
-                      transition: { duration: 0.3 }
+                      transition: { duration: 0.2 }
+                    }}
+                    exit={{ 
+                      opacity: 0, 
+                      y: 20,
+                      transition: { duration: 0.15 }
                     }}
                   >
                     <div className={styles.previewContent}>
-                      <div className={styles.previewHeader}>
-                        <h4>{post.title}</h4>
-                        <span className={styles.previewDate}>
-                          {post.date instanceof Date 
-                            ? post.date.toLocaleDateString('tr-TR', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                              })
-                            : new Date(post.date).toLocaleDateString('tr-TR', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                              })
-                          }
-                        </span>
-                      </div>
-                      <div className={styles.previewDivider}></div>
-                      <p className={styles.previewExcerpt}>{post.excerpt}</p>
+                      <h4 className={styles.previewTitle}>{post.title}</h4>
+                      <p className={styles.previewText}>
+                        {post.excerpt || 'Bu yazıda ilginç konuları ele alıyoruz...'}
+                      </p>
                       <div className={styles.previewFooter}>
                         <span className={styles.previewAuthor}>
                           <span className={styles.previewIcon}>✍️</span> {post.author}
@@ -174,6 +138,8 @@ export default function Home() {
                 )}
               </motion.article>
             ))
+          ) : (
+            <p className={styles.noPosts}>Henüz blog yazısı yok.</p>
           )}
         </div>
       </section>
@@ -193,4 +159,4 @@ export default function Home() {
       </section>
     </div>
   );
-} 
+}

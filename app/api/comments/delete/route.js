@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { deleteDoc, doc } from 'firebase/firestore';
+import { pool } from '@/lib/mysql-posts';
 
 export async function DELETE(request) {
   try {
@@ -14,8 +13,22 @@ export async function DELETE(request) {
       );
     }
     
-    // Yorumu veritabanından sil
-    await deleteDoc(doc(db, 'comments', data.commentId));
+    // Yorumu MySQL'den sil
+    const connection = await pool.getConnection();
+    
+    const [result] = await connection.execute(
+      'DELETE FROM comments WHERE id = ?',
+      [data.commentId]
+    );
+    
+    connection.release();
+    
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: 'Yorum bulunamadı' },
+        { status: 404 }
+      );
+    }
     
     return NextResponse.json({ 
       success: true, 

@@ -155,6 +155,62 @@
   max-width: 100%;
 }
 
+/* OptimizedImage container için stil */
+.optimizedImageContainer {
+  width: 100%;
+  margin: 2rem auto;
+  text-align: center;
+  max-width: 400px; /* %50 küçük - 800px'den 400px */
+  position: relative;
+}
+
+/* OptimizedImage için stil */
+.optimizedImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto;
+  transition: opacity 0.3s ease;
+}
+
+.optimizedImageLoading {
+  opacity: 0.5;
+}
+
+.imageLoading {
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.imageError {
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  border: 1px dashed var(--border-color);
+}
+
+/* Responsive boyutlar */
+@media (max-width: 768px) {
+  .optimizedImageContainer {
+    max-width: 300px; /* Mobile'da daha da küçük */
+    margin: 1.5rem auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .optimizedImageContainer {
+    max-width: 250px; /* Çok küçük ekranlarda daha da küçük */
+    margin: 1rem auto;
+  }
+}
+
 .content a {
   color: var(--accent-color);
   text-decoration: none;

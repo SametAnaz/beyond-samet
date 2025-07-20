@@ -4,6 +4,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeUnwrapImages from 'rehype-unwrap-images';
 import 'highlight.js/styles/night-owl.css';
 import styles from '@/styles/blog/post.module.css';
 import Link from 'next/link';
@@ -12,46 +13,6 @@ import OptimizedImage from './OptimizedImage';
 const CustomMarkdown = ({ content }) => {
   // Özel bileşenler
   const customComponents = {
-    // Görseller için özel bileşen
-    img: ({ node, ...props }) => {
-      // Check if image has optimization attributes
-      if (props['data-optimized'] === 'true') {
-        return (
-          <OptimizedImage
-            src={props.src}
-            alt={props.alt || ''}
-            width={parseInt(props['data-width'], 10) || 800}
-            height={parseInt(props['data-height'], 10) || 450}
-          />
-        );
-      }
-      
-      // Regular image
-      return (
-        <OptimizedImage
-          src={props.src}
-          alt={props.alt || ''}
-          width={800}
-          height={450}
-        />
-      );
-    },
-    
-    // HTML div'lerinden data-optimized-image özniteliğine sahip olanları ayrıca işle
-    div: ({ node, ...props }) => {
-      if (props['data-optimized-image'] === 'true') {
-        return (
-          <OptimizedImage
-            src={props['data-src']}
-            alt={props['data-alt'] || ''}
-            width={parseInt(props['data-width'], 10) || 800}
-            height={parseInt(props['data-height'], 10) || 450}
-          />
-        );
-      }
-      return <div {...props} />;
-    },
-
     // Başlıklar için özel bileşen
     h1: ({ node, ...props }) => <h1 className={styles.heading} {...props} />,
     h2: ({ node, ...props }) => <h2 className={styles.heading} {...props} />,
@@ -59,6 +20,17 @@ const CustomMarkdown = ({ content }) => {
     h4: ({ node, ...props }) => <h4 className={styles.heading} {...props} />,
     h5: ({ node, ...props }) => <h5 className={styles.heading} {...props} />,
     h6: ({ node, ...props }) => <h6 className={styles.heading} {...props} />,
+
+    // Image'lar için özel bileşen - block element olarak render et
+    img: ({ node, src, alt, ...props }) => {
+      return (
+        <OptimizedImage 
+          src={src} 
+          alt={alt || ''} 
+          {...props} 
+        />
+      );
+    },
 
     // Paragraflar için özel bileşen
     p: ({ node, ...props }) => <p className={styles.paragraph} {...props} />,
@@ -121,7 +93,7 @@ const CustomMarkdown = ({ content }) => {
       <ReactMarkdown
         components={customComponents}
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        rehypePlugins={[rehypeHighlight, rehypeUnwrapImages]}
       >
         {content}
       </ReactMarkdown>

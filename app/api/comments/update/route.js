@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { updateDoc, doc } from 'firebase/firestore';
+import { pool } from '@/lib/mysql-posts';
 
 export async function PUT(request) {
   try {
@@ -14,9 +13,48 @@ export async function PUT(request) {
       );
     }
     
-    // Yorumu güncelle
-    const commentRef = doc(db, 'comments', data.commentId);
-    await updateDoc(commentRef, data.data);
+    const updateData = data.data;
+    const connection = await pool.getConnection();
+    
+    // Dinamik olarak güncelleme sorgusu oluştur
+    const updateFields = [];
+    const updateValues = [];
+    
+    if (updateData.name !== undefined) {
+      updateFields.push('name = ?');
+      updateValues.push(updateData.name);
+    }
+    if (updateData.email !== undefined) {
+      updateFields.push('email = ?');
+      updateValues.push(updateData.email);
+    }
+    if (updateData.content !== undefined) {
+      updateFields.push('content = ?');
+      updateValues.push(updateData.content);
+    }
+    if (updateData.approved !== undefined) {
+      updateFields.push('approved = ?');
+      updateValues.push(updateData.approved);
+    }
+    
+    // updatedAt her zaman güncelle
+    updateFields.push('updatedAt = ?');
+    updateValues.push(new Date().toISOString().slice(0, 19).replace('T', ' '));
+    
+    // commentId'yi en sona ekle
+    updateValues.push(data.commentId);
+    
+    const query = `UPDATE comments SET ${updateFields.join(', ')} WHERE id = ?`;
+    
+    const [result] = await connection.execute(query, updateValues);
+    connection.release();
+    
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: 'Yorum bulunamadı' },
+        { status: 404 }
+      );
+    }
     
     return NextResponse.json({ 
       success: true, 

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { addComment } from '@/lib/mysql-posts';
 
 // IP adresinden konum bilgisi alacak fonksiyon
 async function getLocationFromIP(ip) {
@@ -43,23 +42,34 @@ export async function POST(request) {
     // IP adresinden konum bilgisini alma (asenkron)
     const locationData = await getLocationFromIP(data.ipAddress || 'unknown');
     
-    // Yorumu veritabanına ekle
-    const commentRef = await addDoc(collection(db, 'comments'), {
+    // Yorumu MySQL'e ekle
+    const commentData = {
+      id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: data.name,
       email: data.email || null,
       content: data.content,
       slug: data.slug,
+      approved: 0, // Yeni yorumlar onay bekliyor (0 = bekliyor, 1 = onaylı)
+      parentId: data.parentId || null,
       ipAddress: data.ipAddress || 'unknown',
-      userAgent: data.userAgent || {},
-      location: locationData, // Konum bilgisini ekle
-      createdAt: serverTimestamp(),
-      hidden: false
-    });
+      userAgent: JSON.stringify(data.userAgent || {}),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const result = await addComment(commentData);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { message: 'Yorum eklenirken bir hata oluştu: ' + result.error },
+        { status: 500 }
+      );
+    }
     
     return NextResponse.json({ 
       success: true, 
-      id: commentRef.id, 
-      message: 'Yorum başarıyla eklendi' 
+      id: result.id, 
+      message: 'Yorum başarıyla eklendi ve onay bekliyor' 
     });
     
   } catch (error) {

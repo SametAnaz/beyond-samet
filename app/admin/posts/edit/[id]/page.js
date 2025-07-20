@@ -3,35 +3,54 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getPostData, updatePost } from '@/lib/firebase-posts';
-import { serverTimestamp } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
+import { use } from 'react';
+import ImageSelector from '../../../components/ImageSelector';
 
 // React-markdown editörü client tarafında çalıştırmak için
 const ReactMarkdown = dynamic(() => import('react-markdown'), { ssr: false });
 
 export default function EditPost({ params }) {
   const router = useRouter();
-  const id = params.id;
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
   const [post, setPost] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     author: '',
     excerpt: '',
-    content: ''
+    content: '',
+    slug: ''
   });
   const [contentLoading, setContentLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [previewMode, setPreviewMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showImageSelector, setShowImageSelector] = useState(false);
 
   useEffect(() => {
     async function loadPost() {
       try {
         setContentLoading(true);
         console.log(`Edit page: ${id} ID'li blog yazısı yükleniyor...`);
-        const postData = await getPostData(id);
+        
+        // MySQL API'den post'u al - önce tüm post'ları çek, sonra ID ile filtrele
+        const response = await fetch('/api/posts', {
+          cache: 'no-store'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Postları yüklerken hata oluştu');
+        }
+        
+        const data = await response.json();
+        const postData = data.posts.find(p => p.id === id);
+        
+        if (!postData) {
+          throw new Error('Blog yazısı bulunamadı');
+        }
+        
         console.log(`Edit page: ${id} ID'li blog yazısı yüklendi:`, postData);
         
         setPost(postData);
@@ -39,7 +58,8 @@ export default function EditPost({ params }) {
           title: postData.title || '',
           author: postData.author || '',
           excerpt: postData.excerpt || '',
-          content: postData.content || postData.contentHtml || ''
+          content: postData.content || '',
+          slug: postData.slug || ''
         });
       } catch (error) {
         console.error('Blog yazısı yüklenirken hata:', error);
@@ -92,14 +112,26 @@ export default function EditPost({ params }) {
       }).then(res => res.json());
       
       console.log(`Edit page: ${id} ID'li blog yazısı güncelleniyor.`);
-      await updatePost(id, {
-        title: formData.title,
-        author: formData.author,
-        excerpt: formData.excerpt || formData.title,
-        content: formData.content, // Original markdown content
-        contentHtml: processedContent.html || '', // Processed HTML content
-        updatedAt: serverTimestamp()
+      
+      // MySQL API ile güncelle
+      const response = await fetch(`/api/posts?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          author: formData.author,
+          excerpt: formData.excerpt || formData.title,
+          content: formData.content, // Original markdown content
+          slug: formData.slug
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Blog yazısı güncellenemedi');
+      }
 
       setAlert({
         show: true,
@@ -252,6 +284,32 @@ export default function EditPost({ params }) {
                   
                   <div className="form-group">
                     <label htmlFor="content">İçerik *</label>
+                    <div className="editor-toolbar">
+                      <button
+                        type="button"
+                        onClick={() => setShowImageSelector(true)}
+                        className="editor-btn image-btn"
+                        title="Resim Ekle"
+                      >
+                        📷 Resim Ekle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, content: prev.content + '\n\n## ' }))}
+                        className="editor-btn"
+                        title="Başlık Ekle"
+                      >
+                        📝 Başlık
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, content: prev.content + '**kalın metin**' }))}
+                        className="editor-btn"
+                        title="Kalın"
+                      >
+                        <strong>B</strong>
+                      </button>
+                    </div>
                     <textarea
                       id="content"
                       name="content"
@@ -265,7 +323,7 @@ export default function EditPost({ params }) {
                     <div className="form-help">
                       <span className="form-help-icon">ℹ️</span>
                       <span className="form-help-text">
-                        Markdown formatında yazabilirsiniz. Örn: # Başlık, **kalın**, *italik*, [link](url)
+                        HTML veya Markdown formatında yazabilirsiniz. Örn: # Başlık, **kalın**, *italik*, [link](url)
                       </span>
                     </div>
                   </div>
@@ -387,7 +445,52 @@ export default function EditPost({ params }) {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        
+        .editor-toolbar {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+          flex-wrap: wrap;
+        }
+        
+        .editor-btn {
+          background: #f3f4f6;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .editor-btn:hover {
+          background: #e5e7eb;
+          border-color: #9ca3af;
+        }
+        
+        .image-btn {
+          background: #10b981;
+          color: white;
+          border-color: #10b981;
+        }
+        
+        .image-btn:hover {
+          background: #059669;
+          border-color: #059669;
+        }
       `}</style>
+      
+      {/* Image Selector Modal */}
+      <ImageSelector
+        isOpen={showImageSelector}
+        onClose={() => setShowImageSelector(false)}
+        onSelect={(markdownText) => {
+          setFormData(prev => ({ 
+            ...prev, 
+            content: prev.content + '\n\n' + markdownText + '\n\n' 
+          }));
+        }}
+      />
     </div>
   );
 } 

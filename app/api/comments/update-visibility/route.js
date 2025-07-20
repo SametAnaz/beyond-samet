@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { pool } from '@/lib/mysql-posts';
 
 export async function POST(request) {
   try {
@@ -14,22 +13,37 @@ export async function POST(request) {
       );
     }
     
-    if (data.hidden === undefined) {
+    if (data.approved === undefined) {
       return NextResponse.json(
-        { message: 'hidden parametresi gereklidir' },
+        { message: 'approved parametresi gereklidir' },
         { status: 400 }
       );
     }
     
-    // Yorumu güncelle
-    const commentRef = doc(db, 'comments', data.commentId);
-    await updateDoc(commentRef, {
-      hidden: data.hidden
-    });
+    // Yorumu MySQL'de güncelle (approved field)
+    const connection = await pool.getConnection();
+    
+    const [result] = await connection.execute(
+      'UPDATE comments SET approved = ?, updatedAt = ? WHERE id = ?',
+      [
+        data.approved,
+        new Date().toISOString().slice(0, 19).replace('T', ' '),
+        data.commentId
+      ]
+    );
+    
+    connection.release();
+    
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: 'Yorum bulunamadı' },
+        { status: 404 }
+      );
+    }
     
     return NextResponse.json({ 
       success: true, 
-      message: `Yorum başarıyla ${data.hidden ? 'gizlendi' : 'görünür yapıldı'}.` 
+      message: `Yorum başarıyla ${data.approved ? 'onaylandı' : 'onayı kaldırıldı'}.` 
     });
     
   } catch (error) {

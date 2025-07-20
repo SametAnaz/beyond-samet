@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { addPost } from '@/lib/firebase-posts';
-import { serverTimestamp } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
+import ImageSelector from '../../components/ImageSelector';
 
 // React-markdown editörü client tarafında çalıştırmak için
 const ReactMarkdown = dynamic(() => import('react-markdown'), { ssr: false });
@@ -23,6 +22,7 @@ export default function NewPost() {
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [previewMode, setPreviewMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showImageSelector, setShowImageSelector] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,19 +49,32 @@ export default function NewPost() {
         body: JSON.stringify({ markdown: formData.content }),
       }).then(res => res.json());
       
-      console.log('Yeni blog yazısı Firebase\'e kaydediliyor.');
+      console.log('Yeni blog yazısı veritabanına kaydediliyor.');
       const slug = formData.slug ? formData.slug.trim() : '';
       
-      await addPost({
-        title: formData.title,
-        author: formData.author,
-        excerpt: formData.excerpt || formData.title,
-        content: formData.content, // Original markdown content
-        contentHtml: processedContent.html || '', // Processed HTML content
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        slug: slug
+      // MySQL API'sine gönder
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          author: formData.author,
+          excerpt: formData.excerpt || formData.title,
+          content: formData.content, // Original markdown content
+          slug: slug,
+          published: true, // Varsayılan olarak yayınlansın
+          featured: false
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Blog yazısı kaydedilemedi');
+      }
+
+      const result = await response.json();
 
       setAlert({
         show: true,
@@ -132,6 +145,12 @@ export default function NewPost() {
             <Link href="/admin/comments">
               <span className="admin-nav-icon">💬</span>
               Yorumlar
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/gallery">
+              <span className="admin-nav-icon">🖼️</span>
+              Galeri
             </Link>
           </li>
         </ul>
@@ -243,6 +262,32 @@ export default function NewPost() {
                 
                 <div className="form-group">
                   <label htmlFor="content">İçerik *</label>
+                  <div className="editor-toolbar">
+                    <button
+                      type="button"
+                      onClick={() => setShowImageSelector(true)}
+                      className="editor-btn image-btn"
+                      title="Resim Ekle"
+                    >
+                      📷 Resim Ekle
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, content: prev.content + '\n\n## ' }))}
+                      className="editor-btn"
+                      title="Başlık Ekle"
+                    >
+                      📝 Başlık
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, content: prev.content + '**kalın metin**' }))}
+                      className="editor-btn"
+                      title="Kalın"
+                    >
+                      <strong>B</strong>
+                    </button>
+                  </div>
                   <textarea
                     id="content"
                     name="content"
@@ -374,7 +419,52 @@ export default function NewPost() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        
+        .editor-toolbar {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+          flex-wrap: wrap;
+        }
+        
+        .editor-btn {
+          background: #f3f4f6;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .editor-btn:hover {
+          background: #e5e7eb;
+          border-color: #9ca3af;
+        }
+        
+        .image-btn {
+          background: #10b981;
+          color: white;
+          border-color: #10b981;
+        }
+        
+        .image-btn:hover {
+          background: #059669;
+          border-color: #059669;
+        }
       `}</style>
+      
+      {/* Image Selector Modal */}
+      <ImageSelector
+        isOpen={showImageSelector}
+        onClose={() => setShowImageSelector(false)}
+        onSelect={(markdownText) => {
+          setFormData(prev => ({ 
+            ...prev, 
+            content: prev.content + '\n\n' + markdownText + '\n\n' 
+          }));
+        }}
+      />
     </div>
   );
 } 

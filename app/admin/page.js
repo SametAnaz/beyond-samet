@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import AdminLayoutWrapper from './components/AdminLayoutWrapper';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -19,51 +18,56 @@ export default function AdminDashboard() {
       setLoading(true);
       console.log("Dashboard: İstatistikleri yüklemeye başlıyor...");
       
-      // Blog yazılarını getir
-      const postsRef = collection(db, 'posts');
-      const postsSnapshot = await getDocs(postsRef);
+      // MySQL API'den blog yazılarını getir
+      const postsResponse = await fetch('/api/posts', {
+        cache: 'no-store'
+      });
       
-      console.log(`Dashboard: ${postsSnapshot.size} blog yazısı bulundu`);
+      let totalPosts = 0;
+      let recentPosts = [];
       
-      const posts = postsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        // Tarih alanlarını dönüştür
-        let createdAtDate = null;
-        if (data.createdAt) {
-          createdAtDate = new Date(data.createdAt.seconds * 1000);
-        } else if (data.date) {
-          createdAtDate = new Date(data.date.seconds * 1000);
-        }
+      if (postsResponse.ok) {
+        const postsData = await postsResponse.json();
+        totalPosts = postsData.posts.length;
         
-        return {
-          id: doc.id,
-          ...data,
-          slug: data.slug || doc.id,
-          title: data.title || 'Başlıksız Yazı',
-          author: data.author || 'Bilinmiyor',
-          formattedDate: createdAtDate ? createdAtDate.toLocaleDateString('tr-TR') : '-'
-        };
+        console.log(`Dashboard: ${totalPosts} blog yazısı bulundu`);
+        
+        const posts = postsData.posts.map(post => {
+          const createdAtDate = post.createdAt ? new Date(post.createdAt) : null;
+          
+          return {
+            ...post,
+            formattedDate: createdAtDate ? createdAtDate.toLocaleDateString('tr-TR') : '-'
+          };
+        });
+        
+        // Tarih sıralaması (en yeni en üstte)
+        posts.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB - dateA;
+        });
+        
+        recentPosts = posts.slice(0, 5); // Son 5 post
+      }
+      
+      // MySQL API'den tüm yorumları getir (admin için)
+      const commentsResponse = await fetch('/api/admin/comments', {
+        cache: 'no-store'
       });
       
-      // Tarih sıralaması (manuel olarak)
-      posts.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt.seconds * 1000) : 
-                     a.date ? new Date(a.date.seconds * 1000) : new Date(0);
-        const dateB = b.createdAt ? new Date(b.createdAt.seconds * 1000) : 
-                     b.date ? new Date(b.date.seconds * 1000) : new Date(0);
-        return dateB - dateA;
-      });
+      let totalComments = 0;
       
-      // Yorumları getir
-      const commentsQuery = query(collection(db, 'comments'));
-      const commentsSnapshot = await getDocs(commentsQuery);
-      
-      console.log(`Dashboard: ${commentsSnapshot.size} yorum bulundu`);
+      if (commentsResponse.ok) {
+        const commentsData = await commentsResponse.json();
+        totalComments = commentsData.comments ? commentsData.comments.length : 0;
+        console.log(`Dashboard: ${totalComments} yorum bulundu`);
+      }
       
       setStats({
-        totalPosts: postsSnapshot.size,
-        totalComments: commentsSnapshot.size,
-        recentPosts: posts.slice(0, 5) // Son 5 yazıyı al
+        totalPosts,
+        totalComments,
+        recentPosts
       });
     } catch (error) {
       console.error('İstatistikler yüklenirken hata:', error);
@@ -110,6 +114,18 @@ export default function AdminDashboard() {
             <Link href="/admin/comments">
               <span className="admin-nav-icon">💬</span>
               Yorumlar
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/gallery">
+              <span className="admin-nav-icon">🖼️</span>
+              Galeri
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/blog-images">
+              <span className="admin-nav-icon">📸</span>
+              Blog Resimleri
             </Link>
           </li>
         </ul>

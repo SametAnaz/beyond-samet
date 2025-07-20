@@ -7,12 +7,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 't95mijovmqtxlazb.public.blob.vercel-storage.com',
+      },
     ],
   },
-  // CSS modül işleme optimizasyonları
-  optimizeCss: true,
-  // Istemci tarafı derleme iyileştirmeleri
-  swcMinify: true,
   // Hot Module Replacement'i daha güvenli çalıştırma
   webpack: (config, { dev, isServer }) => {
     // Sadece geliştirme modunda ve tarayıcı tarafında ise

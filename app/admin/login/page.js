@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../../../styles/admin/page.module.css';
 
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'beyond2025';
+const ADMIN_USERNAME = 'sirket-ajani';
+const ADMIN_PASSWORD = 'DcZ7IrYIW@ALzJrRbt0GAid7e7yiDt@U*WpaxS4nraoW5SRR@&A*Ss';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
