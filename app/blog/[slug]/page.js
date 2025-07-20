@@ -7,7 +7,7 @@ export const revalidate = 1800; // Her 30 dakikada verileri yeniden çek
 // MySQL API'den post ve comments verilerini çek
 async function getPostWithComments(slug) {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/posts/${slug}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts/${slug}`, {
       next: { revalidate: 5 } // 5 saniyede bir yenile
     });
     
@@ -26,7 +26,7 @@ async function getPostWithComments(slug) {
 // Post'ların slug'larını çek (static generation için)
 async function getAllPostSlugs() {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/posts?published=true`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts?published=true`, {
       next: { revalidate: 5 } // 5 saniyede bir yenile
     });
     

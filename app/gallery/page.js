@@ -10,7 +10,7 @@ async function getGalleryImages() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/gallery`, {
-      cache: 'no-store' // Her zaman fresh data al
+      next: { revalidate: 300 } // 5 dakikada bir yenile
     });
     
     if (!response.ok) {

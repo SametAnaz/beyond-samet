@@ -12,7 +12,7 @@ export const revalidate = 5; // Her 5 saniyede verileri yeniden çek
 // MySQL API'den veri çek
 async function getPosts(page = 1, limit = 5) {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/posts?page=${page}&limit=${limit}&published=true`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts?page=${page}&limit=${limit}&published=true`, {
       next: { revalidate: 5 } // 5 saniyede bir yenile
     });
     
