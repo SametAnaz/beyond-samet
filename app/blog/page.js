@@ -1,29 +1,40 @@
+import { getAllPosts } from '@/lib/mysql-posts';
 import Link from 'next/link';
-import styles from '@/styles/pages/blog.module.css';
-import Pagination from '@/app/components/Pagination';
+import styles from '../../styles/pages/blog.module.css';
+import Pagination from '../components/Pagination';
 
 export const metadata = {
   title: 'Blog',
-  description: 'Yazılım, teknoloji ve kişisel deneyimlerim hakkında blog yazılarım.'
+  description: 'Yazılım geliştirme, projelerim ve teknoloji hakkında yazılarım',
 };
 
-export const revalidate = 5; // Her 5 saniyede verileri yeniden çek
+export const revalidate = 300; // Her 5 dakikada verileri yeniden çek
 
-// MySQL API'den veri çek
+// MySQL'den direkt veri çek
 async function getPosts(page = 1, limit = 5) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts?page=${page}&limit=${limit}&published=true`, {
-      next: { revalidate: 5 } // 5 saniyede bir yenile
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch posts');
+    const result = await getAllPosts();
+    if (!result.success) {
+      throw new Error(result.error);
     }
     
-    return await response.json();
+    // Sadece yayınlanmış postları filtrele
+    const publishedPosts = result.posts.filter(post => post.published === 1);
+    
+    // Sayfalama hesapla
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const posts = publishedPosts.slice(startIndex, endIndex);
+    
+    return {
+      posts,
+      totalPosts: publishedPosts.length,
+      currentPage: page,
+      totalPages: Math.ceil(publishedPosts.length / limit)
+    };
   } catch (error) {
     console.error('Error fetching posts:', error);
-    return { posts: [], pagination: { totalPosts: 0, totalPages: 0, currentPage: 1 } };
+    return { posts: [], totalPosts: 0, currentPage: 1, totalPages: 1 };
   }
 }
 

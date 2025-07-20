@@ -1,38 +1,35 @@
-'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from '../../styles/pages/home.module.css';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { getAllPosts } from '@/lib/mysql-posts';
+import HomeClientWrapper from './HomeClientWrapper';
 
-export default function Home() {
-  const [posts, setPosts] = useState([]);
-  const [hoveredPost, setHoveredPost] = useState(null);
-  const [loading, setLoading] = useState(true);
+export const revalidate = 300; // Her 5 dakikada verileri yeniden çek
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        // MySQL API'sinden blog yazılarını al
-        const response = await fetch('/api/posts?limit=3');
-        if (response.ok) {
-          const data = await response.json();
-          setPosts(data.posts || []); // posts array'ini çıkar
-        } else {
-          console.error("Blog yazıları yüklenirken hata:", response.statusText);
-          setPosts([]); // Hata durumunda boş array
-        }
-      } catch (error) {
-        console.error("Blog yazıları yüklenirken hata:", error);
-        setPosts([]); // Hata durumunda boş array
-      } finally {
-        setLoading(false);
-      }
+async function getLatestPosts() {
+  try {
+    const result = await getAllPosts();
+    if (!result.success) {
+      throw new Error(result.error);
     }
+    
+    // Son 3 yayınlanmış postu al
+    const publishedPosts = result.posts
+      .filter(post => post.published === 1)
+      .slice(0, 3);
+      
+    return publishedPosts;
+  } catch (error) {
+    console.error('Error fetching latest posts:', error);
+    return [];
+  }
+}
 
-    fetchPosts();
-  }, []);
+export default async function Home() {
+  const posts = await getLatestPosts();
+
+  return <HomeClientWrapper posts={posts} />;
 
   return (
     <div className={styles.container}>

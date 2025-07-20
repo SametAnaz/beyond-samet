@@ -1,22 +1,18 @@
+import { getPostBySlug, getAllPosts } from '@/lib/mysql-posts';
 import styles from '../../../styles/blog/post.module.css';
 import CommentSection from '../components/CommentSection';
 import PostContent from '../components/PostContent';
 
-export const revalidate = 1800; // Her 30 dakikada verileri yeniden çek
+export const revalidate = 300; // Her 5 dakikada verileri yeniden çek
 
-// MySQL API'den post ve comments verilerini çek
+// MySQL'den direkt post verisi çek
 async function getPostWithComments(slug) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts/${slug}`, {
-      next: { revalidate: 5 } // 5 saniyede bir yenile
-    });
-    
-    if (!response.ok) {
-      console.error('Response not OK:', response.status, response.statusText);
-      throw new Error(`Failed to fetch post: ${response.status}`);
+    const result = await getPostBySlug(slug);
+    if (!result.success) {
+      throw new Error(result.error);
     }
-    
-    return await response.json();
+    return result;
   } catch (error) {
     console.error('Error fetching post:', error);
     throw error;
@@ -26,16 +22,14 @@ async function getPostWithComments(slug) {
 // Post'ların slug'larını çek (static generation için)
 async function getAllPostSlugs() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts?published=true`, {
-      next: { revalidate: 5 } // 5 saniyede bir yenile
-    });
-    
-    if (!response.ok) {
+    const result = await getAllPosts();
+    if (!result.success) {
       return [];
     }
     
-    const { posts } = await response.json();
-    return posts.map(post => ({ slug: post.slug }));
+    // Sadece yayınlanmış postları döndür
+    const publishedPosts = result.posts.filter(post => post.published === 1);
+    return publishedPosts.map(post => ({ slug: post.slug }));
   } catch (error) {
     console.error('Error fetching post slugs:', error);
     return [];

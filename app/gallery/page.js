@@ -1,3 +1,4 @@
+import { getAllGalleryImages } from '@/lib/mysql-gallery';
 import styles from '../../styles/pages/gallery.module.css';
 import Image from 'next/image';
 
@@ -8,17 +9,11 @@ export const metadata = {
 
 async function getGalleryImages() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/gallery`, {
-      next: { revalidate: 300 } // 5 dakikada bir yenile
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch gallery images');
+    const result = await getAllGalleryImages();
+    if (!result.success) {
+      throw new Error(result.error);
     }
-    
-    const data = await response.json();
-    return data.images || [];
+    return result.images || [];
   } catch (error) {
     console.error('Error fetching gallery images:', error);
     return [];
