@@ -244,13 +244,15 @@
 @media (max-width: 480px) {
   .prevButton {
     left: 10px;
-    top: 10px;
+    bottom: 20px;
+    top: auto;
     transform: none;
   }
 
   .nextButton {
     right: 10px;
-    top: 10px;
+    bottom: 20px;
+    top: auto;
     transform: none;
   }
 
