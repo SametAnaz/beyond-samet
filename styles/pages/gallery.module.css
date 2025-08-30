@@ -105,6 +105,8 @@
   max-height: 800px;
   display: flex;
   flex-direction: column;
+  touch-action: pan-x;
+  user-select: none;
 }
 
 .closeButton {
@@ -168,6 +170,7 @@
   background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
   overflow: hidden;
+  touch-action: pan-x;
 }
 
 .lightboxImage {

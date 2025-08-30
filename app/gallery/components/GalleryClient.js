@@ -7,6 +7,8 @@ import styles from '../../../styles/pages/gallery.module.css';
 export default function GalleryClient({ images }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const openLightbox = (image, index) => {
     setSelectedImage(image);
@@ -27,6 +29,31 @@ export default function GalleryClient({ images }) {
     const newIndex = selectedIndex < images.length - 1 ? selectedIndex + 1 : 0;
     setSelectedIndex(newIndex);
     setSelectedImage(images[newIndex]);
+  };
+
+  // Touch event handlers for swipe
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && images.length > 1) {
+      goToNext();
+    }
+    if (isRightSwipe && images.length > 1) {
+      goToPrevious();
+    }
   };
 
   // Keyboard navigation
@@ -83,7 +110,13 @@ export default function GalleryClient({ images }) {
           className={styles.lightbox}
           onClick={closeLightbox}
         >
-          <div className={styles.lightboxContent} onClick={(e) => e.stopPropagation()}>
+          <div 
+            className={styles.lightboxContent} 
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {/* Close Button */}
             <button 
               className={styles.closeButton}
