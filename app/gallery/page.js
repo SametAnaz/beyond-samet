@@ -1,6 +1,6 @@
 import { getAllGalleryImages } from '@/lib/mysql-gallery';
 import styles from '../../styles/pages/gallery.module.css';
-import Image from 'next/image';
+import GalleryClient from './components/GalleryClient';
 
 export const metadata = {
   title: 'Galeri',
@@ -35,24 +35,7 @@ export default async function GalleryPage() {
           <p>Henüz hiç fotoğraf yüklenmemiş.</p>
         </div>
       ) : (
-        <div className={styles.galleryGrid}>
-          {images.map((image, index) => (
-            <div key={image.id} className={styles.imageContainer}>
-              <Image
-                src={image.url}
-                alt={image.name || `Galeri resmi ${index + 1}`}
-                width={600}
-                height={400}
-                className={styles.image}
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-              />
-              <div className={styles.imageCaption}>
-                {image.title || image.name || `Resim ${index + 1}`}
-              </div>
-            </div>
-          ))}
-        </div>
+        <GalleryClient images={images} />
       )}
     </div>
   );

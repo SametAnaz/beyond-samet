@@ -72,6 +72,134 @@
   font-size: 1.1rem;
 }
 
+/* Lightbox Styles */
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lightboxContent {
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+  max-width: 1200px;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+.closeButton {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.closeButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 3rem;
+  cursor: pointer;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 1001;
+}
+
+.navButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prevButton {
+  left: -80px;
+}
+
+.nextButton {
+  right: -80px;
+}
+
+.lightboxImageContainer {
+  position: relative;
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lightboxImage {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.lightboxInfo {
+  margin-top: 1rem;
+  text-align: center;
+  color: white;
+}
+
+.lightboxTitle {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.lightboxDescription {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.lightboxCounter {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .galleryGrid {
     grid-template-columns: 1fr;
@@ -80,5 +208,54 @@
   
   .title {
     font-size: 2rem;
+  }
+
+  .lightboxContent {
+    width: 95vw;
+    height: 85vh;
+  }
+
+  .closeButton {
+    top: -40px;
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+  }
+
+  .navButton {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+  }
+
+  .prevButton {
+    left: -60px;
+  }
+
+  .nextButton {
+    right: -60px;
+  }
+
+  .lightboxTitle {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .prevButton {
+    left: 10px;
+    top: 10px;
+    transform: none;
+  }
+
+  .nextButton {
+    right: 10px;
+    top: 10px;
+    transform: none;
+  }
+
+  .closeButton {
+    top: 10px;
+    right: 10px;
   }
 } 
