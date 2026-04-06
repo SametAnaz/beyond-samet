@@ -1,5 +1,7 @@
 .footer {
-  background-color: var(--bg-secondary);
+  background:
+    radial-gradient(circle at 12% -20%, rgba(84, 191, 218, 0.16), transparent 36%),
+    linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
   padding: 3rem 0 1.5rem;
   margin-top: 4rem;
   border-top: 1px solid var(--border-color);
@@ -24,15 +26,16 @@
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
 
 .description {
   color: var(--text-secondary);
-  max-width: 300px;
-  line-height: 1.5;
+  max-width: 360px;
+  line-height: 1.7;
 }
 
 .linksSection {
@@ -47,7 +50,7 @@
 
 .linkTitle {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 1rem;
   color: var(--text-primary);
 }
@@ -63,13 +66,17 @@
 }
 
 .linkList li a {
+  display: inline-flex;
+  padding: 0.2rem 0;
   text-decoration: none;
   color: var(--text-secondary);
-  transition: color 0.2s ease;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .linkList li a:hover {
   color: var(--text-primary);
+  border-color: var(--accent-color);
 }
 
 .bottom {

@@ -1,192 +1,268 @@
+.page {
+  width: 100%;
+}
+
 .container {
-  max-width: 900px;
+  width: min(1120px, 92vw);
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 1.6rem 0 4rem;
+  display: grid;
+  gap: 1.35rem;
 }
 
-.title {
-  font-size: 2.5rem;
-  color: var(--text-primary);
-  margin-bottom: 2.5rem;
-  text-align: center;
-}
-
-.profileSection {
-  display: flex;
+.hero {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: clamp(1rem, 2.5vw, 2.2rem);
   align-items: center;
-  gap: 2rem;
-  margin-bottom: 3rem;
+  padding: clamp(1.2rem, 2.5vw, 2rem);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 82% 8%, rgba(83, 192, 223, 0.16), transparent 36%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 90%, transparent), var(--bg-secondary));
+  box-shadow: 0 16px 38px rgba(8, 28, 43, 0.12);
 }
 
-.profileImage {
-  flex-shrink: 0;
+.heroMediaWrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.heroGlow {
+  position: absolute;
+  width: 82%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(83, 192, 223, 0.24), transparent 65%);
+  filter: blur(10px);
 }
 
 .avatar {
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid var(--accent-color);
+  position: relative;
+  width: min(280px, 62vw);
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 52%, transparent);
+  box-shadow: 0 14px 30px rgba(8, 28, 43, 0.22);
 }
 
-.profileInfo {
-  flex: 1;
+.heroContent {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--text-primary);
 }
 
 .lead {
-  font-size: 1.25rem;
-  line-height: 1.6;
+  margin: 0;
   color: var(--text-secondary);
+  font-size: clamp(1rem, 2.1vw, 1.13rem);
+  line-height: 1.7;
+  max-width: 66ch;
 }
 
-.section {
-  margin-bottom: 3rem;
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.metaBadge {
+  padding: 0.38rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 38%, var(--border-color));
+  background-color: color-mix(in srgb, var(--accent-color) 12%, transparent);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.sectionCard,
+.contactCard,
+.cvCard {
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-primary) 92%, transparent), var(--bg-secondary));
+  padding: clamp(1rem, 2.2vw, 1.7rem);
+  box-shadow: 0 10px 24px rgba(8, 28, 43, 0.08);
 }
 
 .sectionTitle {
-  font-size: 1.75rem;
+  margin: 0 0 0.8rem;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  letter-spacing: -0.015em;
   color: var(--text-primary);
-  margin-bottom: 1.5rem;
-  position: relative;
 }
 
-.sectionTitle::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 40px;
-  height: 3px;
-  background-color: var(--accent-color);
-}
-
-.section p {
+.sectionText {
+  margin: 0 0 0.7rem;
   color: var(--text-secondary);
-  line-height: 1.7;
-  margin-bottom: 1rem;
+  line-height: 1.72;
 }
 
 .skillsGrid {
+  margin-top: 0.25rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
 }
 
-.skillItem {
-  background-color: var(--bg-secondary);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+.skillCard {
+  border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+  padding: 0.95rem;
 }
 
-.skillName {
-  font-size: 1.2rem;
+.skillTitle {
+  margin: 0 0 0.65rem;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  font-size: 1.01rem;
 }
 
 .skillList {
   list-style: none;
-  padding: 0;
   margin: 0;
-  color: var(--text-secondary);
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
 }
 
 .skillList li {
-  margin-bottom: 0.5rem;
-  padding-left: 1.5rem;
   position: relative;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 0.94rem;
 }
 
 .skillList li::before {
-  content: '✓';
+  content: '';
   position: absolute;
   left: 0;
-  color: var(--accent-color);
+  top: 0.55rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--accent-color);
 }
 
-.link {
-  color: var(--accent-color);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
+.focusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
-.link:hover {
-  text-decoration: underline;
-}
-
-/* CV Container Styles */
-.cvContainer {
-  margin-top: 4rem;
-  margin-bottom: 2rem;
-  padding: 2rem;
-  background-color: var(--bg-secondary);
+.focusItem {
   border-radius: 12px;
-  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid color-mix(in srgb, var(--accent-color) 30%, var(--border-color));
+  background-color: color-mix(in srgb, var(--accent-color) 10%, transparent);
+  padding: 0.78rem 0.85rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.contactCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.mailLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.62rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 48%, transparent);
+  background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+  color: var(--text-primary);
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.mailLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-color);
+}
+
+.cvCard {
   text-align: center;
 }
 
-.cvContent {
-  max-width: 550px;
-  margin: 0 auto;
-}
-
 .cvTitle {
-  font-size: 1.75rem;
+  margin: 0;
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
   color: var(--text-primary);
-  margin-bottom: 1rem;
 }
 
 .cvText {
+  margin: 0.65rem 0 1rem;
   color: var(--text-secondary);
-  margin-bottom: 1.5rem;
 }
 
 .downloadButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--accent-color);
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
+  min-height: 48px;
+  padding: 0.72rem 1.2rem;
+  border-radius: 999px;
+  background: linear-gradient(140deg, var(--accent-color), color-mix(in srgb, var(--accent-color) 72%, white));
+  color: #fff;
   text-decoration: none;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-weight: 700;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent-color) 42%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .downloadButton:hover {
-  background-color: var(--accent-color-dark, #0056b3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent-color) 50%, transparent);
 }
 
-.downloadButton:active {
-  transform: translateY(0);
-}
-
-.downloadIcon {
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
-}
-
-@media (max-width: 768px) {
-  .profileSection {
-    flex-direction: column;
+@media (max-width: 940px) {
+  .hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
     text-align: center;
   }
-  
-  .sectionTitle::after {
-    left: 50%;
-    transform: translateX(-50%);
+
+  .heroContent {
+    justify-items: center;
   }
-  
+
   .skillsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .focusGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .contactCard {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

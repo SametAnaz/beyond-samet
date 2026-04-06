@@ -24,7 +24,7 @@ export default function HomeClientWrapper({ posts }) {
               Merhaba, Ben <span className={styles.accent}>Samet</span>
             </h1>
             <p className={styles.heroDescription}>
-              Bilgisayar Mühendisliği öğrencisiyim. Web geliştirme, yazılım mühendisliği ve teknoloji konularında çalışıyorum ve blog yazıları yazıyorum.
+              Yazılım ve donanım alanında projeler geliştiriyor ve kendimi sürekli geliştiriyorum. Burada projelerimi ve blog yazılarımı paylaşıyorum.
             </p>
             <div className={styles.heroButtons}>
               <Link href="/about" className={`${styles.button} ${styles.primary}`}>
@@ -90,9 +90,10 @@ export default function HomeClientWrapper({ posts }) {
           <div className={styles.aboutText}>
             <h2 className={styles.aboutTitle}>Hakkımda</h2>
             <p className={styles.aboutDescription}>
-              Recep Tayyip Erdoğan Üniversitesi'nde Bilgisayar Mühendisliği eğitimi alıyorum. 
-              Web geliştirme, yazılım mühendisliği ve yapay zeka konularında kendimi 
-              geliştiriyorum ve projeler yapıyorum.
+              Backend ve AI odaklı sistemler geliştiren bir bilgisayar mühendisliği öğrencisiyim.
+              Ölçeklenebilir web uygulamaları, otomasyon sistemleri, veri odaklı çözümler,
+              sunucu kurulumu ve yönetimi üzerine çalışıyorum. Ayrıca DevOps alanına ilgi duyuyor,
+              sistemlerin geliştirme ve operasyon süreçlerini birlikte ele almayı seviyorum.
             </p>
             <Link href="/about" className={`${styles.button} ${styles.secondary}`}>
               Daha Fazla Bilgi
@@ -101,7 +102,7 @@ export default function HomeClientWrapper({ posts }) {
           
           <div className={styles.aboutImage}>
             <Image
-              src="/assets/images/me1.jpg"
+              src="/assets/images/me6.png"
               alt="Samet Anaz"
               width={400}
               height={400}

@@ -7,8 +7,34 @@ import styles from '../../../styles/pages/gallery.module.css';
 export default function GalleryClient({ images }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [imageLayouts, setImageLayouts] = useState({});
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+
+  const getLayoutType = (naturalWidth, naturalHeight) => {
+    if (!naturalWidth || !naturalHeight) {
+      return 'landscape';
+    }
+
+    const ratio = naturalWidth / naturalHeight;
+    if (ratio < 0.9) {
+      return 'portrait';
+    }
+    if (ratio <= 1.15) {
+      return 'square';
+    }
+    return 'landscape';
+  };
+
+  const handleImageLoad = (imageKey, loadedImage) => {
+    const layoutType = getLayoutType(loadedImage.naturalWidth, loadedImage.naturalHeight);
+    setImageLayouts((prev) => {
+      if (prev[imageKey] === layoutType) {
+        return prev;
+      }
+      return { ...prev, [imageKey]: layoutType };
+    });
+  };
 
   const openLightbox = (image, index) => {
     setSelectedImage(image);
@@ -85,7 +111,16 @@ export default function GalleryClient({ images }) {
     <>
       <div className={styles.galleryGrid}>
         {images.map((image, index) => (
-          <div key={image.id} className={styles.imageContainer}>
+          <div
+            key={image.id}
+            className={`${styles.imageContainer} ${
+              imageLayouts[image.id] === 'portrait'
+                ? styles.imageContainerPortrait
+                : imageLayouts[image.id] === 'square'
+                  ? styles.imageContainerSquare
+                  : styles.imageContainerLandscape
+            }`}
+          >
             <Image
               src={image.url}
               alt={image.title || image.name || `Galeri resmi ${index + 1}`}
@@ -94,6 +129,7 @@ export default function GalleryClient({ images }) {
               className={styles.image}
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+              onLoadingComplete={(loadedImage) => handleImageLoad(image.id, loadedImage)}
               onClick={() => openLightbox(image, index)}
               style={{ cursor: 'pointer' }}
             />

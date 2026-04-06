@@ -1,11 +1,14 @@
 .navbar {
   width: 100%;
-  background-color: var(--bg-secondary);
-  padding: 1rem 0;
+  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.9rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
   border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 10px 24px rgba(13, 37, 56, 0.08);
 }
 
 .container {
@@ -18,8 +21,9 @@
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -40,15 +44,21 @@
 }
 
 .navLinks li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
   text-decoration: none;
   color: var(--text-secondary);
-  font-weight: 500;
-  transition: color 0.2s ease;
+  font-weight: 700;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .navLinks li a:hover,
 .navLinks li a.active {
   color: var(--text-primary);
+  background-color: color-mix(in srgb, var(--accent-color) 16%, transparent);
 }
 
 .themeToggleItem {
@@ -60,9 +70,10 @@
 .menuButton {
   display: none;
   background: none;
-  border: none;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.45rem;
 }
 
 .hamburger {
@@ -99,18 +110,25 @@
 
   .navLinks {
     position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    top: calc(100% + 0.35rem);
+    left: 1rem;
+    right: 1rem;
     flex-direction: column;
-    background-color: var(--bg-secondary);
+    align-items: stretch;
+    background: color-mix(in srgb, var(--bg-primary) 94%, transparent);
+    border-radius: 16px;
     padding: 1rem;
     gap: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 16px 36px rgba(9, 33, 50, 0.2);
     transform: translateY(-100%);
     opacity: 0;
     pointer-events: none;
     transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .navLinks li a {
+    justify-content: center;
   }
 
   .navLinks.active {

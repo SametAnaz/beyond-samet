@@ -77,6 +77,12 @@
   padding: 1.5rem;
 }
 
+.browserLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 1rem;
+}
+
 .loading {
   text-align: center;
   padding: 3rem;
@@ -117,18 +123,27 @@
 }
 
 .imageCard {
+  width: 100%;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
   background: white;
+  padding: 0;
+  text-align: left;
+  appearance: none;
 }
 
 .imageCard:hover {
   border-color: #10b981;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.imageCardSelected {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14);
 }
 
 .image {
@@ -204,6 +219,97 @@
   background: #4b5563;
 }
 
+.settingsPanel {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #f9fafb;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.previewBox {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.previewImage {
+  max-width: 100%;
+  margin: 0;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.fieldGroup label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.fieldGroup input,
+.fieldGroup textarea,
+.fieldGroup select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  background: white;
+  color: #111827;
+  font: inherit;
+}
+
+.fieldGroup textarea {
+  resize: vertical;
+}
+
+.inlineFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.helperText {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.insertActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.insertBtn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.insertBtn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.settingsEmpty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #6b7280;
+  padding: 1rem;
+}
+
 /* Dark mode support */
 :global(.dark) .modal {
   background: #374151;
@@ -237,16 +343,54 @@
   border-color: #6b7280;
 }
 
+:global(.dark) .settingsPanel {
+  background: #374151;
+  border-color: #6b7280;
+}
+
+:global(.dark) .previewBox {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+
+:global(.dark) .fieldGroup label {
+  color: #e5e7eb;
+}
+
+:global(.dark) .fieldGroup input,
+:global(.dark) .fieldGroup textarea,
+:global(.dark) .fieldGroup select {
+  background: #1f2937;
+  color: #f3f4f6;
+  border-color: #6b7280;
+}
+
+:global(.dark) .settingsEmpty {
+  color: #d1d5db;
+}
+
+:global(.dark) .helperText {
+  color: #d1d5db;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .modal {
     width: 95%;
     max-height: 90vh;
   }
+
+  .browserLayout {
+    grid-template-columns: 1fr;
+  }
   
   .imageGrid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 0.75rem;
+  }
+
+  .inlineFields {
+    grid-template-columns: 1fr;
   }
   
   .footer {

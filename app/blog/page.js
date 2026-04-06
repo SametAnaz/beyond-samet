@@ -53,20 +53,32 @@ export default async function BlogPage({ searchParams }) {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
+        <p className={styles.kicker}>Beyond Samet</p>
         <h1 className={styles.title}>Blog</h1>
         <p className={styles.description}>
           Yazılım geliştirme, projelerim ve teknoloji hakkında yazılarım
         </p>
+        <div className={styles.headerMeta}>
+          <span className={styles.metaPill}>{totalPosts} yazı</span>
+          <span className={styles.metaPill}>{currentPage}/{Math.max(1, totalPages)} sayfa</span>
+        </div>
       </header>
 
       <div className={styles.blogList}>
         {posts.length === 0 ? (
-          <p className={styles.noPosts}>Henüz blog yazısı bulunmamaktadır.</p>
+          <div className={styles.noPosts}>
+            <h2>Henüz yayınlanan yazı yok</h2>
+            <p>Yakında burada yeni içerikler paylaşacağım.</p>
+          </div>
         ) : (
-          posts.map((post) => (
-            <article key={post.slug} className={styles.blogItem}>
+          posts.map((post, index) => (
+            <article
+              key={post.slug}
+              className={`${styles.blogItem} ${index === 0 ? styles.featured : ''}`}
+            >
               <Link href={`/blog/${post.slug}`} className={styles.blogLink}>
                 <div className={styles.blogContent}>
+                  {index === 0 && <span className={styles.featuredBadge}>Öne Çıkan</span>}
                   <h2 className={styles.blogTitle}>{post.title}</h2>
                   <div className={styles.blogMeta}>
                     <span className={styles.blogAuthor}>{post.author}</span>
@@ -79,7 +91,7 @@ export default async function BlogPage({ searchParams }) {
                     </time>
                   </div>
                   <p className={styles.blogExcerpt}>{post.excerpt}</p>
-                  <span className={styles.readMore}>Devamını Oku</span>
+                  <span className={styles.readMore}>Devamını Oku →</span>
                 </div>
               </Link>
             </article>
@@ -89,12 +101,14 @@ export default async function BlogPage({ searchParams }) {
       
       {/* Sayfalandırma bileşeni - toplam yazı sayısı 0'dan büyükse göster */}
       {totalPosts > 0 && (
-        <Pagination 
-          totalItems={totalPosts} 
-          itemsPerPage={POSTS_PER_PAGE} 
-          currentPage={currentPage}
-          path="/blog"
-        />
+        <div className={styles.paginationWrap}>
+          <Pagination 
+            totalItems={totalPosts} 
+            itemsPerPage={POSTS_PER_PAGE} 
+            currentPage={currentPage}
+            path="/blog"
+          />
+        </div>
       )}
     </div>
   );

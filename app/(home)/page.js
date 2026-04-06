@@ -42,8 +42,7 @@ export default async function Home() {
               Merhaba, Ben <span className={styles.accent}>Samet</span>
             </h1>
             <p className={styles.heroDescription}>
-              Bilgisayar Mühendisliği öğrencisiyim. Web geliştirme, yazılım mühendisliği 
-              ve teknoloji konularında çalısıyorum ve blog yazıları yazıyorum.
+              Backend ve AI odaklı sistemler geliştiren bir bilgisayar mühendisliği öğrencisiyim. Ölçeklenebilir web uygulamaları, otomasyon sistemleri, veri odaklı çözümler, sunucu kurulumu ve yönetimi üzerine çalışıyorum. Ayrıca DevOps alanına ilgi duyuyor, sistemlerin geliştirme ve operasyon süreçlerini birlikte ele almayı seviyorum.
             </p>
             <div className={styles.heroButtons}>
               <p>
@@ -142,8 +141,7 @@ export default async function Home() {
         <div className={styles.aboutContent}>
           <h2 className={styles.sectionTitle}>Hakkımda</h2>
           <p>
-            Recep Tayyip Erdoğan Üniversitesi'nde Bilgisayar Mühendisliği eğitimi alıyorum.
-            Web geliştirme, yazılım mühendisliği ve yapay zeka konularında kendimi geliştiriyorum.
+            Backend ve AI odaklı sistemler geliştiren bir bilgisayar mühendisliği öğrencisiyim. Ölçeklenebilir web uygulamaları, otomasyon sistemleri, veri odaklı çözümler, sunucu kurulumu ve yönetimi üzerine çalışıyorum. Ayrıca DevOps alanına ilgi duyuyor, sistemlerin geliştirme ve operasyon süreçlerini birlikte ele almayı seviyorum.
           </p>
           <Link href="/about" className={styles.aboutLink}>
             Daha Fazla Bilgi

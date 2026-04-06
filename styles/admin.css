@@ -28,7 +28,8 @@
 }
 
 /* Dark mode theme */
-[data-theme="dark"] {
+[data-theme="dark"],
+.dark {
   --admin-primary: #6366f1;
   --admin-primary-hover: #818cf8;
   
@@ -616,13 +617,15 @@
 }
 
 /* Dark mode overrides */
-[data-theme="dark"] .btn-secondary {
+[data-theme="dark"] .btn-secondary,
+.dark .btn-secondary {
   background-color: var(--admin-bg-sidebar);
   color: var(--admin-text-secondary);
   border-color: var(--admin-border);
 }
 
-[data-theme="dark"] .btn-secondary:hover {
+[data-theme="dark"] .btn-secondary:hover,
+.dark .btn-secondary:hover {
   background-color: var(--admin-bg-input);
   color: var(--admin-text-primary);
 }

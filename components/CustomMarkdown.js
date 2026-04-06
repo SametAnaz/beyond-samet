@@ -10,6 +10,86 @@ import styles from '@/styles/blog/post.module.css';
 import Link from 'next/link';
 import OptimizedImage from './OptimizedImage';
 
+const IMAGE_SIZE_MAP = {
+  sm: { width: 320, height: 180 },
+  md: { width: 520, height: 293 },
+  lg: { width: 760, height: 428 },
+  xl: { width: 960, height: 540 },
+  full: { width: 1200, height: 675 },
+};
+
+function parseImageTitle(title) {
+  if (!title) {
+    return {};
+  }
+
+  if (!title.includes('=')) {
+    return { caption: title };
+  }
+
+  return title.split('|').reduce((accumulator, part) => {
+    const [rawKey, ...rawValueParts] = part.split('=');
+    const key = rawKey?.trim();
+    const rawValue = rawValueParts.join('=').trim();
+
+    if (!key || !rawValue) {
+      return accumulator;
+    }
+
+    const value = decodeURIComponent(rawValue.replace(/\+/g, '%20'));
+    accumulator[key] = value;
+    return accumulator;
+  }, {});
+}
+
+function getImagePresentation(widthValue) {
+  if (!widthValue) {
+    return {
+      width: IMAGE_SIZE_MAP.md.width,
+      height: IMAGE_SIZE_MAP.md.height,
+      containerStyle: undefined,
+    };
+  }
+
+  const normalizedWidth = String(widthValue).trim();
+
+  if (normalizedWidth.endsWith('%')) {
+    const percent = Number.parseFloat(normalizedWidth);
+    const fallbackWidth = IMAGE_SIZE_MAP.md.width;
+    const computedWidth = Number.isFinite(percent) && percent > 0
+      ? Math.round((fallbackWidth * percent) / 100)
+      : fallbackWidth;
+
+    return {
+      width: computedWidth,
+      height: Math.round(computedWidth * 0.5625),
+      containerStyle: {
+        width: normalizedWidth,
+        maxWidth: '100%',
+      },
+    };
+  }
+
+  const parsedWidth = Number.parseInt(normalizedWidth, 10);
+
+  if (Number.isFinite(parsedWidth) && parsedWidth > 0) {
+    return {
+      width: parsedWidth,
+      height: Math.round(parsedWidth * 0.5625),
+      containerStyle: {
+        width: `${parsedWidth}px`,
+        maxWidth: '100%',
+      },
+    };
+  }
+
+  return {
+    width: IMAGE_SIZE_MAP.md.width,
+    height: IMAGE_SIZE_MAP.md.height,
+    containerStyle: undefined,
+  };
+}
+
 const CustomMarkdown = ({ content }) => {
   // Özel bileşenler
   const customComponents = {
@@ -22,13 +102,34 @@ const CustomMarkdown = ({ content }) => {
     h6: ({ node, ...props }) => <h6 className={styles.heading} {...props} />,
 
     // Image'lar için özel bileşen - block element olarak render et
-    img: ({ node, src, alt, ...props }) => {
+    img: ({ node, src, alt, title, ...props }) => {
+      const metadata = parseImageTitle(title);
+      const align = metadata.align || 'center';
+      const dimensions = getImagePresentation(metadata.width);
+      const caption = metadata.caption || '';
+      const containerStyle = {
+        ...(dimensions.containerStyle || {}),
+        margin: align === 'left'
+          ? '0 auto 0 0'
+          : align === 'right'
+            ? '0 0 0 auto'
+            : '0 auto',
+      };
+
       return (
-        <OptimizedImage 
-          src={src} 
-          alt={alt || ''} 
-          {...props} 
-        />
+        <figure className={styles.markdownFigure}>
+          <OptimizedImage
+            src={src}
+            alt={alt || caption || ''}
+            width={dimensions.width}
+            height={dimensions.height}
+            containerClassName={styles.markdownFigureImage}
+            containerStyle={containerStyle}
+            imageClassName={styles.markdownFigureImageElement}
+            {...props}
+          />
+          {caption && <figcaption className={styles.markdownFigureCaption}>{caption}</figcaption>}
+        </figure>
       );
     },
 
