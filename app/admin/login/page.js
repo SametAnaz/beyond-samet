@@ -4,9 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../../../styles/admin/page.module.css';
 
-const ADMIN_USERNAME = 'sirket-ajani';
-const ADMIN_PASSWORD = 'DcZ7IrYIW@ALzJrRbt0GAid7e7yiDt@U*WpaxS4nraoW5SRR@&A*Ss';
-
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     username: '',
@@ -59,7 +56,7 @@ export default function LoginPage() {
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Reset errors
@@ -73,21 +70,31 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Authentication check
-      if (formData.username === ADMIN_USERNAME && formData.password === ADMIN_PASSWORD) {
-        // Save auth data to localStorage
-        const authData = {
-          isAuthenticated: true,
-          timestamp: Date.now()
-        };
-        localStorage.setItem('adminAuth', JSON.stringify(authData));
-        
-        // Redirect to admin dashboard
-        router.push('/admin');
-      } else {
-        setError('Geçersiz kullanıcı adı veya şifre');
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setError(result.error || 'Geçersiz kullanıcı adı veya şifre');
         setLoading(false);
+        return;
       }
+
+      // Save auth data to localStorage
+      const authData = {
+        isAuthenticated: true,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('adminAuth', JSON.stringify(authData));
+      
+      // Redirect to admin dashboard
+      router.push('/admin');
     } catch (err) {
       console.error('Login error:', err);
       setError('Bir hata oluştu. Lütfen tekrar deneyin.');
