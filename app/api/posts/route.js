@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllPosts, addPost, updatePost, deletePost, initializePostsTable } from '@/lib/mysql-posts';
+import { getAdminSession, requireAdminAuth } from '@/lib/admin-auth';
 
 export async function GET(request) {
   try {
@@ -7,6 +8,7 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 10;
     const published = searchParams.get('published');
+    const isAdmin = Boolean(getAdminSession(request));
     
     const result = await getAllPosts();
     
@@ -19,8 +21,11 @@ export async function GET(request) {
     
     let posts = result.posts;
     
-    // Published filter
-    if (published !== null) {
+    // Published filter. Public callers can only see published posts;
+    // admins can explicitly request drafts/unpublished posts.
+    if (!isAdmin) {
+      posts = posts.filter(post => post.published === 1);
+    } else if (published !== null) {
       const isPublished = published === 'true';
       posts = posts.filter(post => (isPublished ? post.published === 1 : post.published === 0));
     }
@@ -54,6 +59,9 @@ export async function GET(request) {
 
 // POST - Yeni blog yazısı ekle
 export async function POST(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     // Tabloyu başlat
     await initializePostsTable();
@@ -112,6 +120,9 @@ export async function POST(request) {
 
 // PUT - Blog yazısı güncelle
 export async function PUT(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -153,6 +164,9 @@ export async function PUT(request) {
 
 // DELETE - Blog yazısı sil
 export async function DELETE(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
 import { addComment } from '@/lib/mysql-posts';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
-// IP adresinden konum bilgisi alacak fonksiyon
+function sanitizeText(value, maxLength) {
+  return String(value || '').trim().slice(0, maxLength);
+}
+
+function sanitizeEmail(value) {
+  const email = sanitizeText(value, 254);
+  if (!email) return null;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
 async function getLocationFromIP(ip) {
   try {
-    // Test IP'si veya özel IP'ler için konum bilgisi alamayız
     if (ip === 'unknown' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
       return { country: 'unknown', city: 'unknown' };
     }
     
-    // ipinfo.io servisini kullanarak konum bilgisini alma
-    const response = await fetch(`https://ipinfo.io/${ip}/json`);
+    const response = await fetch(`https://ipinfo.io/${encodeURIComponent(ip)}/json`, {
+      signal: AbortSignal.timeout(1500),
+    });
     if (!response.ok) {
       throw new Error('IP bilgisi alınamadı');
     }
@@ -28,31 +38,43 @@ async function getLocationFromIP(ip) {
 }
 
 export async function POST(request) {
+  const rateLimit = checkRateLimit(request, {
+    keyPrefix: 'comments-add',
+    limit: 5,
+    windowMs: 10 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit);
+  }
+
   try {
     const data = await request.json();
+    const name = sanitizeText(data.name, 120);
+    const content = sanitizeText(data.content, 2000);
+    const slug = sanitizeText(data.slug, 180);
+    const email = sanitizeEmail(data.email);
     
-    // Zorunlu alanları kontrol et
-    if (!data.name || !data.content || !data.slug) {
+    if (!name || !content || !slug) {
       return NextResponse.json(
         { message: 'İsim, içerik ve slug alanları zorunludur' },
         { status: 400 }
       );
     }
     
-    // IP adresinden konum bilgisini alma (asenkron)
-    const locationData = await getLocationFromIP(data.ipAddress || 'unknown');
+    const ipAddress = getClientIp(request);
+    await getLocationFromIP(ipAddress);
     
-    // Yorumu MySQL'e ekle
     const commentData = {
       id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: data.name,
-      email: data.email || null,
-      content: data.content,
-      slug: data.slug,
-      approved: 0, // Yeni yorumlar onay bekliyor (0 = bekliyor, 1 = onaylı)
+      name,
+      email,
+      content,
+      slug,
+      approved: 0,
       parentId: data.parentId || null,
-      ipAddress: data.ipAddress || 'unknown',
-      userAgent: JSON.stringify(data.userAgent || {}),
+      ipAddress,
+      userAgent: request.headers.get('user-agent') || 'unknown',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -61,7 +83,7 @@ export async function POST(request) {
     
     if (!result.success) {
       return NextResponse.json(
-        { message: 'Yorum eklenirken bir hata oluştu: ' + result.error },
+        { message: 'Yorum eklenirken bir hata oluştu' },
         { status: 500 }
       );
     }
@@ -76,8 +98,8 @@ export async function POST(request) {
     console.error('Yorum eklenirken hata:', error);
     
     return NextResponse.json(
-      { message: 'Yorum eklenirken bir hata oluştu: ' + error.message },
+      { message: 'Yorum eklenirken bir hata oluştu' },
       { status: 500 }
     );
   }
-} 
+}

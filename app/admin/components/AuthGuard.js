@@ -9,67 +9,46 @@ export default function AuthGuard({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check authentication immediately to prevent flickering
-    const checkAuth = () => {
+    let isMounted = true;
+
+    async function checkAuth() {
       try {
-        // Only access localStorage if in browser environment
-        if (typeof window === 'undefined') return false;
-        
-        const authData = JSON.parse(localStorage.getItem('adminAuth') || '{"isAuthenticated": false}');
-        
-        // Check authentication status
-        if (!authData.isAuthenticated) {
+        const response = await fetch('/api/admin/session', {
+          method: 'GET',
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
           router.replace('/admin/login');
-          return false;
+          return;
         }
-        
-        // Check session timeout (24 hours)
-        const now = Date.now();
-        const authTime = authData.timestamp || 0;
-        const timeElapsed = now - authTime;
-        const timeLimit = 24 * 60 * 60 * 1000; // 24 hours
-        
-        if (timeElapsed > timeLimit) {
-          // Session expired, log out
-          localStorage.removeItem('adminAuth');
-          router.replace('/admin/login');
-          return false;
+
+        if (isMounted) {
+          setIsAuthenticated(true);
         }
-        
-        return true;
       } catch (error) {
         console.error('Authentication check error:', error);
-        // Only attempt to remove if in browser environment
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('adminAuth');
-        }
         router.replace('/admin/login');
-        return false;
-      }
-    };
-
-    // Add a mounted check to prevent setState after unmount
-    let isMounted = true;
-    
-    // Only run in browser
-    if (typeof window !== 'undefined') {
-      const authenticated = checkAuth();
-      if (isMounted) {
-        setIsAuthenticated(authenticated);
-        setLoading(false);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
-    
-    // Cleanup function to prevent memory leaks
+
+    checkAuth();
+
     return () => {
       isMounted = false;
     };
   }, [router]);
 
-  // Logout function
-  const handleLogout = () => {
-    localStorage.removeItem('adminAuth');
-    router.replace('/admin/login');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/session', { method: 'DELETE' });
+    } finally {
+      router.replace('/admin/login');
+    }
   };
 
   if (loading) {
@@ -82,19 +61,17 @@ export default function AuthGuard({ children }) {
   }
 
   if (!isAuthenticated) {
-    return null; // Router already redirected to login page
+    return null;
   }
 
   return (
     <div className="admin-container">
-      {/* Logout button */}
       <div className="admin-header">
         <button onClick={handleLogout} className="logout-button">
           Çıkış Yap
         </button>
       </div>
       
-      {/* Main content */}
       {children}
       
       <style jsx>{`
@@ -154,4 +131,4 @@ export default function AuthGuard({ children }) {
       `}</style>
     </div>
   );
-} 
+}

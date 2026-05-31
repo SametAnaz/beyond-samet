@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { put, del, list } from '@vercel/blob';
+import { sanitizeFileName, validateImageFile } from '@/lib/blob-storage';
 import { 
   addBlogImage, 
   getAllBlogImages, 
@@ -10,6 +12,9 @@ import {
 
 // GET - Tüm blog image'larını getir
 export async function GET(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     // Tabloyu başlat
     await initializeBlogImagesTable();
@@ -49,37 +54,37 @@ export async function GET(request) {
 
 // POST - Yeni blog image yükle
 export async function POST(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     // Tabloyu başlat
     await initializeBlogImagesTable();
     
     const formData = await request.formData();
     const file = formData.get('file');
+    
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      return NextResponse.json({
+        success: false,
+        error: validation.error
+      }, { status: 400 });
+    }
+
     const title = formData.get('title') || file.name;
     const alt = formData.get('alt') || title;
     const description = formData.get('description') || '';
     const postSlug = formData.get('postSlug') || null;
-    const order = formData.get('order') || 999;
-    
-    if (!file) {
-      return NextResponse.json({
-        success: false,
-        error: 'Dosya bulunamadı'
-      }, { status: 400 });
-    }
-    
-    // Dosya türü kontrolü
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({
-        success: false,
-        error: 'Sadece resim dosyaları yüklenebilir'
-      }, { status: 400 });
-    }
+    const parsedOrder = Number.parseInt(formData.get('order') || '999', 10);
+    const order = Number.isInteger(parsedOrder) ? parsedOrder : 999;
     
     // Vercel Blob'a yükle
-    const filename = `blog-images/${Date.now()}-${file.name}`;
+    const safeName = sanitizeFileName(file.name) || `image-${Date.now()}`;
+    const filename = `blog-images/${Date.now()}-${safeName}`;
     const blob = await put(filename, file, {
-      access: 'public'
+      access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN
     });
     
     // MySQL'e metadata kaydet
@@ -92,7 +97,7 @@ export async function POST(request) {
       alt,
       description,
       postSlug,
-      order: parseInt(order),
+      order,
       size: file.size,
       type: file.type,
       originalName: file.name,
@@ -105,7 +110,7 @@ export async function POST(request) {
     if (!result.success) {
       // Blob'u sil (metadata kayıt başarısız)
       try {
-        await del(blob.url);
+        await del(blob.url, { token: process.env.BLOB_READ_WRITE_TOKEN });
       } catch (delError) {
         console.error('Blob silme hatası:', delError);
       }
@@ -132,6 +137,9 @@ export async function POST(request) {
 
 // PUT - Blog image güncelle
 export async function PUT(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -169,6 +177,9 @@ export async function PUT(request) {
 
 // DELETE - Blog image sil
 export async function DELETE(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -209,7 +220,7 @@ export async function DELETE(request) {
     
     // Vercel Blob'dan sil
     try {
-      await del(image.url);
+      await del(image.url, { token: process.env.BLOB_READ_WRITE_TOKEN });
     } catch (delError) {
       console.error('⚠️  Blob silme hatası (metadata silindi ama blob kaldı):', delError);
     }

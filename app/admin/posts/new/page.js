@@ -348,7 +348,7 @@ export default function NewPost() {
                   </div>
                   <div className="form-help">
                     <span className="form-help-icon">ℹ️</span>
-                    <span>Yazınızın URL'de görünecek kısmı. Boş bırakırsanız otomatik oluşturulur.</span>
+                    <span>Yazınızın URL&apos;de görünecek kısmı. Boş bırakırsanız otomatik oluşturulur.</span>
                   </div>
                 </div>
                 

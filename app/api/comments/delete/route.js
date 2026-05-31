@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { pool } from '@/lib/mysql-posts';
 
 export async function DELETE(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const data = await request.json();
     
@@ -14,14 +18,10 @@ export async function DELETE(request) {
     }
     
     // Yorumu MySQL'den sil
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(
+    const [result] = await pool.execute(
       'DELETE FROM comments WHERE id = ?',
       [data.commentId]
     );
-    
-    connection.release();
     
     if (result.affectedRows === 0) {
       return NextResponse.json(

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { updateImageMetadata } from '../../../../lib/mysql-gallery';
 
 export async function PUT(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const { id, title, description, order } = await request.json();
     

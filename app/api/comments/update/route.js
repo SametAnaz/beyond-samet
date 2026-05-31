@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { pool } from '@/lib/mysql-posts';
 
 export async function PUT(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const data = await request.json();
     
@@ -14,8 +18,6 @@ export async function PUT(request) {
     }
     
     const updateData = data.data;
-    const connection = await pool.getConnection();
-    
     // Dinamik olarak güncelleme sorgusu oluştur
     const updateFields = [];
     const updateValues = [];
@@ -46,8 +48,7 @@ export async function PUT(request) {
     
     const query = `UPDATE comments SET ${updateFields.join(', ')} WHERE id = ?`;
     
-    const [result] = await connection.execute(query, updateValues);
-    connection.release();
+    const [result] = await pool.execute(query, updateValues);
     
     if (result.affectedRows === 0) {
       return NextResponse.json(

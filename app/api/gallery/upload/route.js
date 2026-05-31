@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { uploadImageToBlob, sanitizeFileName, validateImageFile } from '../../../../lib/blob-storage';
 
 export async function POST(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file');
     const customTitle = formData.get('title');
     const description = formData.get('description');
-    const order = formData.get('order') || '999';
+    const rawOrder = Number.parseInt(formData.get('order') || '999', 10);
+    const order = Number.isInteger(rawOrder) ? rawOrder : 999;
     
     // Dosya validasyonu
     const validation = validateImageFile(file);
@@ -31,7 +36,7 @@ export async function POST(request) {
     const metadata = {
       title: customTitle || file.name.split('.')[0],
       description: description || '',
-      order: parseInt(order),
+      order,
       originalName: file.name
     };
     

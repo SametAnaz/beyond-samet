@@ -111,7 +111,7 @@ export default function AboutPage() {
             download="Samet-Anaz-CV.pdf"
             className={styles.downloadButton}
           >
-            CV'yi İndir
+            CV&apos;yi İndir
           </a>
         </section>
       </div>

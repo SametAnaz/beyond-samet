@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { deleteImageFromBlob } from '../../../../lib/blob-storage';
 
 export async function DELETE(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const { url } = await request.json();
     

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import styles from '../../../styles/pages/gallery.module.css';
 
@@ -45,17 +45,17 @@ export default function GalleryClient({ images }) {
     setSelectedImage(null);
   };
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
     const newIndex = selectedIndex > 0 ? selectedIndex - 1 : images.length - 1;
     setSelectedIndex(newIndex);
     setSelectedImage(images[newIndex]);
-  };
+  }, [images, selectedIndex]);
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     const newIndex = selectedIndex < images.length - 1 ? selectedIndex + 1 : 0;
     setSelectedIndex(newIndex);
     setSelectedImage(images[newIndex]);
-  };
+  }, [images, selectedIndex]);
 
   // Touch event handlers for swipe
   const handleTouchStart = (e) => {
@@ -105,7 +105,7 @@ export default function GalleryClient({ images }) {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [selectedImage, selectedIndex]);
+  }, [selectedImage, selectedIndex, goToNext, goToPrevious]);
 
   return (
     <>

@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import { setAdminSessionCookie } from '@/lib/admin-auth';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 function getRequiredEnv(name) {
   const value = process.env[name];
@@ -23,6 +25,16 @@ function safeCompare(input, expected) {
 
 export async function POST(request) {
   try {
+    const rateLimit = checkRateLimit(request, {
+      keyPrefix: 'admin-login',
+      limit: 10,
+      windowMs: 15 * 60 * 1000,
+    });
+
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit);
+    }
+
     const { username = '', password = '' } = await request.json();
 
     const adminUsername = getRequiredEnv('ADMIN_USERNAME');
@@ -38,7 +50,8 @@ export async function POST(request) {
       );
     }
 
-    return Response.json({ success: true });
+    const response = Response.json({ success: true });
+    return setAdminSessionCookie(response, adminUsername);
   } catch (error) {
     console.error('Admin login error:', error);
     return Response.json(

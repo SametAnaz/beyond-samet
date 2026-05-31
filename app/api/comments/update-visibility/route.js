@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { pool } from '@/lib/mysql-posts';
 
 export async function POST(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     const data = await request.json();
     
@@ -21,9 +25,7 @@ export async function POST(request) {
     }
     
     // Yorumu MySQL'de güncelle (approved field)
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(
+    const [result] = await pool.execute(
       'UPDATE comments SET approved = ?, updatedAt = ? WHERE id = ?',
       [
         data.approved,
@@ -32,7 +34,6 @@ export async function POST(request) {
       ]
     );
     
-    connection.release();
     
     if (result.affectedRows === 0) {
       return NextResponse.json(

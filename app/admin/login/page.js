@@ -86,14 +86,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Save auth data to localStorage
-      const authData = {
-        isAuthenticated: true,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('adminAuth', JSON.stringify(authData));
-      
-      // Redirect to admin dashboard
+      // Server set an httpOnly admin session cookie; redirect to dashboard.
       router.push('/admin');
     } catch (err) {
       console.error('Login error:', err);

@@ -6,6 +6,9 @@ import { getDatabaseConfig } from '@/lib/mysql-config';
 const pool = mysql.createPool(getDatabaseConfig());
 
 export async function GET(request) {
+  const authResponse = requireAdminAuth(request);
+  if (authResponse) return authResponse;
+
   try {
     // Comments tablosunu başlat
     await initializeCommentsTable();
