@@ -1,18 +1,9 @@
 import mysql from 'mysql2/promise';
 import { initializeCommentsTable } from '@/lib/mysql-posts';
+import { getDatabaseConfig } from '@/lib/mysql-config';
 
 // MySQL bağlantı havuzu oluştur
-const pool = mysql.createPool({
-  host: '95.70.204.147',
-  port: 3306,
-  user: 'root',
-  password: 'bMYDUJx6usmjOFiV36HqUUD8i40SiuM',
-  database: 'beyond_samet_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  charset: 'utf8mb4'
-});
+const pool = mysql.createPool(getDatabaseConfig());
 
 export async function GET(request) {
   try {
