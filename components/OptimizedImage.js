@@ -23,7 +23,7 @@ export default function OptimizedImage({
   const imgHeight = height || 225; // 450 -> 225
 
   return (
-    <div
+    <span
       className={`${styles.optimizedImageContainer} ${className || ''} ${containerClassName || ''}`.trim()}
       style={containerStyle}
     >
@@ -39,9 +39,9 @@ export default function OptimizedImage({
           ${imageClassName || ''}
         `}
         style={imageStyle}
-        onLoadingComplete={() => setLoading(false)}
+        onLoad={() => setLoading(false)}
         priority={priority}
       />
-    </div>
+    </span>
   );
-} 
+}

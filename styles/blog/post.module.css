@@ -157,6 +157,7 @@
 
 /* OptimizedImage container için stil */
 .optimizedImageContainer {
+  display: block;
   width: 100%;
   margin: 2rem auto;
   text-align: center;
@@ -498,4 +499,4 @@ h6.heading { font-size: 1rem; }
   .inlineCode {
     font-size: 0.8em;
   }
-} 
+}

@@ -101,7 +101,7 @@ const CustomMarkdown = ({ content }) => {
     h5: ({ node, ...props }) => <h5 className={styles.heading} {...props} />,
     h6: ({ node, ...props }) => <h6 className={styles.heading} {...props} />,
 
-    // Image'lar için özel bileşen - block element olarak render et
+    // Görseller metin, bağlantı ve vurgu içinde de geçerli HTML üretmeli.
     img: ({ node, src, alt, title, ...props }) => {
       const metadata = parseImageTitle(title);
       const align = metadata.align || 'center';
@@ -117,7 +117,11 @@ const CustomMarkdown = ({ content }) => {
       };
 
       return (
-        <figure className={styles.markdownFigure}>
+        <span
+          className={styles.markdownFigure}
+          role="figure"
+          aria-label={caption || alt || 'Blog görseli'}
+        >
           <OptimizedImage
             src={src}
             alt={alt || caption || ''}
@@ -128,8 +132,8 @@ const CustomMarkdown = ({ content }) => {
             imageClassName={styles.markdownFigureImageElement}
             {...props}
           />
-          {caption && <figcaption className={styles.markdownFigureCaption}>{caption}</figcaption>}
-        </figure>
+          {caption && <span className={styles.markdownFigureCaption}>{caption}</span>}
+        </span>
       );
     },
 
@@ -165,28 +169,30 @@ const CustomMarkdown = ({ content }) => {
       <blockquote className={styles.blockquote} {...props} />
     ),
 
-    // Kod blokları için özel bileşen
-    code: ({ node, inline, className, children, ...props }) => {
-      const match = /language-(\w+)/.exec(className || '');
-      return !inline ? (
+    // Blok düzeni pre içinde kalır; code tek başına satır içi kodu gösterir.
+    pre: ({ node, children, ...props }) => {
+      const codeNode = node.children.find(child => child.tagName === 'code');
+      const match = /language-(\S+)/.exec(codeNode?.properties?.className?.join(' ') || '');
+      return (
         <div className={styles.codeContainer}>
           {match && (
             <div className={styles.codeHeader}>
               <span>{match[1]}</span>
             </div>
           )}
-          <pre className={styles.pre}>
-            <code className={`${className} ${styles.code}`} {...props}>
-              {children}
-            </code>
+          <pre className={styles.pre} {...props}>
+            {React.Children.map(children, child => React.isValidElement(child)
+              ? React.cloneElement(child, { isBlock: true })
+              : child)}
           </pre>
         </div>
-      ) : (
-        <code className={styles.inlineCode} {...props}>
-          {children}
-        </code>
       );
     },
+    code: ({ node, isBlock = false, className, children, ...props }) => (
+      <code className={`${className || ''} ${isBlock ? styles.code : styles.inlineCode}`.trim()} {...props}>
+        {children}
+      </code>
+    ),
   };
 
   return (
@@ -202,4 +208,4 @@ const CustomMarkdown = ({ content }) => {
   );
 };
 
-export default CustomMarkdown; 
+export default CustomMarkdown;
