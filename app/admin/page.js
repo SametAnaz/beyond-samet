@@ -19,7 +19,7 @@ export default function AdminDashboard() {
       console.log("Dashboard: İstatistikleri yüklemeye başlıyor...");
       
       // MySQL API'den blog yazılarını getir
-      const postsResponse = await fetch('/api/posts', {
+      const postsResponse = await fetch('/api/posts?admin=true&limit=5', {
         cache: 'no-store'
       });
       
@@ -28,7 +28,7 @@ export default function AdminDashboard() {
       
       if (postsResponse.ok) {
         const postsData = await postsResponse.json();
-        totalPosts = postsData.posts.length;
+        totalPosts = postsData.pagination.totalPosts;
         
         console.log(`Dashboard: ${totalPosts} blog yazısı bulundu`);
         
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
           </button>
         </div>
         <ul className="admin-nav">
-          <div className="admin-nav-section">Ana Menü</div>
+          <li className="admin-nav-section">Ana Menü</li>
           <li>
             <Link href="/admin" className="active">
               <span className="admin-nav-icon">📊</span>

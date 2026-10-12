@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { initializePostsTable, initializeCommentsTable, addPost, addComment } from '../lib/mysql-posts.js';
+import { initializePostsTable, initializeCommentsTable, addPost, addComment } from '../../lib/mysql-posts.js';
 
 config({ path: '.env.local' });
 

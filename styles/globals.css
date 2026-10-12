@@ -270,3 +270,8 @@ select:focus {
     font-size: 1.5rem;
   }
 }
+
+.page-message { max-width: 720px; margin: 4rem auto; padding: 2rem; text-align: center; }
+.page-message button { margin-top: 1rem; padding: .7rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

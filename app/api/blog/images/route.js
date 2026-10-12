@@ -1,22 +1,25 @@
+import { imageDimensions } from '@/lib/image-metadata';
+import { validateImageFile } from '@/lib/blob-storage';
+import { requireAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { put, del, list } from '@vercel/blob';
-import { 
-  addBlogImage, 
-  getAllBlogImages, 
-  updateBlogImage, 
-  deleteBlogImage,
-  initializeBlogImagesTable 
+import {
+  addBlogImage,
+  getAllBlogImages,
+  updateBlogImage,
+  deleteBlogImage
 } from '@/lib/mysql-posts';
 
 // GET - Tüm blog image'larını getir
 export async function GET(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     // Tabloyu başlat
-    await initializeBlogImagesTable();
-    
+
     const { searchParams } = new URL(request.url);
     const postSlug = searchParams.get('postSlug');
-    
+
     let result;
     if (postSlug) {
       // Belirli bir post'un image'larını getir
@@ -26,14 +29,14 @@ export async function GET(request) {
       // Tüm image'ları getir
       result = await getAllBlogImages();
     }
-    
+
     if (!result.success) {
       return NextResponse.json({
         success: false,
         error: result.error
       }, { status: 500 });
     }
-    
+
     return NextResponse.json({
       success: true,
       images: result.images
@@ -49,44 +52,50 @@ export async function GET(request) {
 
 // POST - Yeni blog image yükle
 export async function POST(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     // Tabloyu başlat
-    await initializeBlogImagesTable();
-    
+
     const formData = await request.formData();
     const file = formData.get('file');
-    const title = formData.get('title') || file.name;
+    const title = formData.get('title') || file?.name || '';
     const alt = formData.get('alt') || title;
     const description = formData.get('description') || '';
     const postSlug = formData.get('postSlug') || null;
     const order = formData.get('order') || 999;
-    
+
     if (!file) {
       return NextResponse.json({
         success: false,
         error: 'Dosya bulunamadı'
       }, { status: 400 });
     }
-    
+
     // Dosya türü kontrolü
-    if (!file.type.startsWith('image/')) {
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
       return NextResponse.json({
         success: false,
-        error: 'Sadece resim dosyaları yüklenebilir'
+        error: validation.error
       }, { status: 400 });
     }
-    
+
     // Vercel Blob'a yükle
+    const dimensions = await imageDimensions(file);
     const filename = `blog-images/${Date.now()}-${file.name}`;
     const blob = await put(filename, file, {
-      access: 'public'
+      access: 'public',
+      addRandomSuffix: true
     });
-    
+
     // MySQL'e metadata kaydet
     const imageData = {
       id: `blog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      width: dimensions.width,
+      height: dimensions.height,
       url: blob.url,
-      path: filename,
+      path: blob.pathname,
       fileName: file.name,
       title,
       alt,
@@ -99,9 +108,9 @@ export async function POST(request) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
+
     const result = await addBlogImage(imageData);
-    
+
     if (!result.success) {
       // Blob'u sil (metadata kayıt başarısız)
       try {
@@ -109,13 +118,13 @@ export async function POST(request) {
       } catch (delError) {
         console.error('Blob silme hatası:', delError);
       }
-      
+
       return NextResponse.json({
         success: false,
         error: result.error
       }, { status: 500 });
     }
-    
+
     return NextResponse.json({
       success: true,
       image: imageData,
@@ -132,28 +141,30 @@ export async function POST(request) {
 
 // PUT - Blog image güncelle
 export async function PUT(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    
+
     if (!id) {
       return NextResponse.json({
         success: false,
         error: 'Image ID gerekli'
       }, { status: 400 });
     }
-    
+
     const updateData = await request.json();
-    
+
     const result = await updateBlogImage(id, updateData);
-    
+
     if (!result.success) {
       return NextResponse.json({
         success: false,
         error: result.error
       }, { status: 500 });
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Blog image başarıyla güncellendi'
@@ -169,17 +180,19 @@ export async function PUT(request) {
 
 // DELETE - Blog image sil
 export async function DELETE(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    
+
     if (!id) {
       return NextResponse.json({
         success: false,
         error: 'Image ID gerekli'
       }, { status: 400 });
     }
-    
+
     // Önce image bilgisini al (blob URL'i için)
     const imagesResult = await getAllBlogImages();
     if (!imagesResult.success) {
@@ -188,7 +201,7 @@ export async function DELETE(request) {
         error: 'Blog images alınamadı'
       }, { status: 500 });
     }
-    
+
     const image = imagesResult.images.find(img => img.id === id);
     if (!image) {
       return NextResponse.json({
@@ -196,24 +209,24 @@ export async function DELETE(request) {
         error: 'Blog image bulunamadı'
       }, { status: 404 });
     }
-    
+
     // MySQL'den sil
     const result = await deleteBlogImage(id);
-    
+
     if (!result.success) {
       return NextResponse.json({
         success: false,
         error: result.error
       }, { status: 500 });
     }
-    
+
     // Vercel Blob'dan sil
     try {
       await del(image.url);
     } catch (delError) {
       console.error('⚠️  Blob silme hatası (metadata silindi ama blob kaldı):', delError);
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Blog image başarıyla silindi'

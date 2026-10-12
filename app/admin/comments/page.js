@@ -134,7 +134,7 @@ export default function AdminComments() {
           </button>
         </div>
         <ul className="admin-nav">
-          <div className="admin-nav-section">Ana Menü</div>
+          <li className="admin-nav-section">Ana Menü</li>
           <li>
             <Link href="/admin">
               <span className="admin-nav-icon">📊</span>

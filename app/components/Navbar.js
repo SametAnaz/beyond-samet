@@ -14,7 +14,7 @@ export default function Navbar() {
     setMenuOpen(!menuOpen);
   };
 
-  const isActive = (path) => pathname === path;
+  const isActive = path => path === '/' ? pathname === '/' : pathname.startsWith(path);
 
   return (
     <nav className={styles.navbar}>
@@ -27,13 +27,15 @@ export default function Navbar() {
           <button 
             className={styles.menuButton} 
             onClick={toggleMenu}
-            aria-label="Toggle menu"
+            aria-label="Menüyü aç veya kapat"
+            aria-expanded={menuOpen}
+            aria-controls="main-navigation"
           >
             <span className={styles.hamburger}></span>
           </button>
         </div>
 
-        <ul className={`${styles.navLinks} ${menuOpen ? styles.active : ''}`}>
+        <ul id="main-navigation" className={`${styles.navLinks} ${menuOpen ? styles.active : ''}`}>
           <li>
             <Link 
               href="/" 
@@ -43,6 +45,7 @@ export default function Navbar() {
               Ana Sayfa
             </Link>
           </li>
+          <li><Link href="/projects" className={isActive('/projects') ? styles.active : ''} onClick={() => setMenuOpen(false)}>Projeler</Link></li>
           <li>
             <Link 
               href="/blog" 

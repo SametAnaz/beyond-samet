@@ -1,216 +1,41 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import styles from '../../../styles/pages/gallery.module.css';
+import styles from '@/styles/pages/gallery.module.css';
 
+function layout(image) {
+  const ratio = (image.width || 600) / (image.height || 400);
+  return ratio < 0.9 ? styles.imageContainerPortrait : ratio <= 1.15 ? styles.imageContainerSquare : styles.imageContainerLandscape;
+}
 export default function GalleryClient({ images }) {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [imageLayouts, setImageLayouts] = useState({});
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-
-  const getLayoutType = (naturalWidth, naturalHeight) => {
-    if (!naturalWidth || !naturalHeight) {
-      return 'landscape';
-    }
-
-    const ratio = naturalWidth / naturalHeight;
-    if (ratio < 0.9) {
-      return 'portrait';
-    }
-    if (ratio <= 1.15) {
-      return 'square';
-    }
-    return 'landscape';
-  };
-
-  const handleImageLoad = (imageKey, loadedImage) => {
-    const layoutType = getLayoutType(loadedImage.naturalWidth, loadedImage.naturalHeight);
-    setImageLayouts((prev) => {
-      if (prev[imageKey] === layoutType) {
-        return prev;
-      }
-      return { ...prev, [imageKey]: layoutType };
-    });
-  };
-
-  const openLightbox = (image, index) => {
-    setSelectedImage(image);
-    setSelectedIndex(index);
-  };
-
-  const closeLightbox = () => {
-    setSelectedImage(null);
-  };
-
-  const goToPrevious = () => {
-    const newIndex = selectedIndex > 0 ? selectedIndex - 1 : images.length - 1;
-    setSelectedIndex(newIndex);
-    setSelectedImage(images[newIndex]);
-  };
-
-  const goToNext = () => {
-    const newIndex = selectedIndex < images.length - 1 ? selectedIndex + 1 : 0;
-    setSelectedIndex(newIndex);
-    setSelectedImage(images[newIndex]);
-  };
-
-  // Touch event handlers for swipe
-  const handleTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && images.length > 1) {
-      goToNext();
-    }
-    if (isRightSwipe && images.length > 1) {
-      goToPrevious();
-    }
-  };
-
-  // Keyboard navigation
+  const [index, setIndex] = useState(null);
+  const dialog = useRef(null);
+  const trigger = useRef(null);
+  const touch = useRef(null);
+  const selected = index === null ? null : images[index];
+  const isOpen = Boolean(selected);
   useEffect(() => {
-    if (!selectedImage) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        closeLightbox();
-      } else if (e.key === 'ArrowLeft') {
-        goToPrevious();
-      } else if (e.key === 'ArrowRight') {
-        goToNext();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Prevent body scroll when lightbox is open
+    if (!isOpen) return;
+    const element = dialog.current;
+    element.showModal();
+    const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedImage, selectedIndex]);
-
-  return (
-    <>
-      <div className={styles.galleryGrid}>
-        {images.map((image, index) => (
-          <div
-            key={image.id}
-            className={`${styles.imageContainer} ${
-              imageLayouts[image.id] === 'portrait'
-                ? styles.imageContainerPortrait
-                : imageLayouts[image.id] === 'square'
-                  ? styles.imageContainerSquare
-                  : styles.imageContainerLandscape
-            }`}
-          >
-            <Image
-              src={image.url}
-              alt={image.title || image.name || `Galeri resmi ${index + 1}`}
-              width={600}
-              height={400}
-              className={styles.image}
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-              onLoadingComplete={(loadedImage) => handleImageLoad(image.id, loadedImage)}
-              onClick={() => openLightbox(image, index)}
-              style={{ cursor: 'pointer' }}
-            />
-            <div className={styles.imageCaption}>
-              {image.title || image.name || `Resim ${index + 1}`}
-            </div>
-          </div>
-        ))}
+    return () => { element.close(); document.body.style.overflow = overflow; trigger.current?.focus(); };
+  }, [isOpen]);
+  const close = () => setIndex(null);
+  const move = direction => setIndex(current => (current + direction + images.length) % images.length);
+  return <>
+    <div className={styles.galleryGrid}>{images.map((image, i) => <button key={image.id} type="button" className={`${styles.imageContainer} ${layout(image)}`} onClick={event => { trigger.current = event.currentTarget; setIndex(i); }} aria-label={`${image.title || 'Görsel'}: büyüt`}>
+      <Image src={image.url} alt={image.title || 'Galeri görseli'} width={image.width || 600} height={image.height || 400} sizes="(max-width: 640px) 92vw, (max-width: 1000px) 46vw, 580px" className={styles.image} />
+      <span className={styles.imageCaption}>{image.title || 'Görsel'}</span>
+    </button>)}</div>
+    {selected && <dialog ref={dialog} className={styles.lightbox} aria-labelledby="gallery-image-title" onCancel={event => { event.preventDefault(); close(); }} onClick={event => { if (event.target === event.currentTarget) close(); }} onKeyDown={event => { if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); } if (event.key === 'ArrowRight') { event.preventDefault(); move(1); } }}>
+      <div className={styles.lightboxContent} onTouchStart={event => { touch.current = event.touches[0].clientX; }} onTouchEnd={event => { if (touch.current !== null) { const delta = touch.current - event.changedTouches[0].clientX; if (Math.abs(delta) > 50) move(delta > 0 ? 1 : -1); } touch.current = null; }}>
+        <button type="button" className={styles.closeButton} onClick={close} aria-label="Kapat" autoFocus>×</button>
+        {images.length > 1 && <><button type="button" className={`${styles.navButton} ${styles.prevButton}`} onClick={() => move(-1)} aria-label="Önceki görsel">‹</button><button type="button" className={`${styles.navButton} ${styles.nextButton}`} onClick={() => move(1)} aria-label="Sonraki görsel">›</button></>}
+        <div className={styles.lightboxImageContainer}><Image src={selected.url} alt={selected.title || 'Galeri görseli'} fill sizes="92vw" className={styles.lightboxImage} priority /></div>
+        <div className={styles.lightboxInfo}><h2 id="gallery-image-title" className={styles.lightboxTitle}>{selected.title || 'Görsel'}</h2>{selected.description && <p className={styles.lightboxDescription}>{selected.description}</p>}<p className={styles.lightboxCounter} aria-live="polite">{index + 1} / {images.length}</p></div>
       </div>
-
-      {/* Lightbox Modal */}
-      {selectedImage && (
-        <div 
-          className={styles.lightbox}
-          onClick={closeLightbox}
-        >
-          <div 
-            className={styles.lightboxContent} 
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {/* Close Button */}
-            <button 
-              className={styles.closeButton}
-              onClick={closeLightbox}
-              aria-label="Kapat"
-            >
-              ×
-            </button>
-
-            {/* Navigation Buttons */}
-            {images.length > 1 && (
-              <>
-                <button 
-                  className={`${styles.navButton} ${styles.prevButton}`}
-                  onClick={goToPrevious}
-                  aria-label="Önceki resim"
-                >
-                  ‹
-                </button>
-                <button 
-                  className={`${styles.navButton} ${styles.nextButton}`}
-                  onClick={goToNext}
-                  aria-label="Sonraki resim"
-                >
-                  ›
-                </button>
-              </>
-            )}
-
-            {/* Main Image */}
-            <div className={styles.lightboxImageContainer}>
-              <Image
-                src={selectedImage.url}
-                alt={selectedImage.title || selectedImage.name || 'Galeri resmi'}
-                fill
-                className={styles.lightboxImage}
-                style={{ objectFit: 'contain' }}
-                priority
-              />
-            </div>
-
-            {/* Image Info */}
-            <div className={styles.lightboxInfo}>
-              <h3 className={styles.lightboxTitle}>
-                {selectedImage.title || selectedImage.name || `Resim ${selectedIndex + 1}`}
-              </h3>
-              {selectedImage.description && (
-                <p className={styles.lightboxDescription}>
-                  {selectedImage.description}
-                </p>
-              )}
-              <p className={styles.lightboxCounter}>
-                {selectedIndex + 1} / {images.length}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+    </dialog>}
+  </>;
 }

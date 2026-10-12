@@ -4,10 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from '../../styles/pages/home.module.css';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 
-export default function HomeClientWrapper({ posts }) {
-  const [hoveredPost, setHoveredPost] = useState(null);
+export default function HomeClientWrapper({ posts, projects }) {
+  const reduceMotion = useReducedMotion();
 
   return (
     <div className={styles.container}>
@@ -15,7 +15,7 @@ export default function HomeClientWrapper({ posts }) {
       <section className={styles.hero}>
         <motion.div 
           className={styles.heroContent}
-          initial={{ opacity: 0, y: 30 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
@@ -24,16 +24,19 @@ export default function HomeClientWrapper({ posts }) {
               Merhaba, Ben <span className={styles.accent}>Samet</span>
             </h1>
             <p className={styles.heroDescription}>
-              Yazılım ve donanım alanında projeler geliştiriyor ve kendimi sürekli geliştiriyorum. Burada projelerimi ve blog yazılarımı paylaşıyorum.
+              Backend ve AI odaklı sistemler geliştiriyorum. Veri akışlarını, otomasyonu ve güvenilir uygulama altyapılarını gerçek problemlerle birleştiriyorum.
             </p>
             <div className={styles.heroButtons}>
-              <Link href="/about" className={`${styles.button} ${styles.primary}`}>
-                Hakkımda
+              <Link href="/projects" className={`${styles.button} ${styles.primary}`}>
+                Projelerimi İncele
               </Link>
+              <Link href="/contact" className={`${styles.button} ${styles.secondary}`}>İletişime Geç</Link>
             </div>
           </div>
         </motion.div>
       </section>
+
+      <section className={styles.blogSection}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>Seçilmiş Projeler</h2><Link href="/projects" className={styles.viewAll}>Tüm projeler →</Link></div>{projects}</section>
 
       {/* Son Blog Yazıları */}
       <section className={styles.blogSection}>
@@ -50,11 +53,9 @@ export default function HomeClientWrapper({ posts }) {
               <motion.article
                 key={post.slug}
                 className={styles.blogCard}
-                initial={{ opacity: 0, y: 30 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                onMouseEnter={() => setHoveredPost(post.slug)}
-                onMouseLeave={() => setHoveredPost(null)}
               >
                 <Link href={`/blog/${post.slug}`} className={styles.blogLink}>
                   <h3 className={styles.blogTitle}>{post.title}</h3>

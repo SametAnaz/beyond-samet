@@ -1,7 +1,10 @@
+import { requireAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { uploadImageToBlob, sanitizeFileName, validateImageFile } from '../../../../lib/blob-storage';
 
 export async function POST(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const formData = await request.formData();
     const file = formData.get('file');

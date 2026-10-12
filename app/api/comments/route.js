@@ -1,14 +1,10 @@
-import mysql from 'mysql2/promise';
-import { initializeCommentsTable } from '@/lib/mysql-posts';
-import { getDatabaseConfig } from '@/lib/mysql-config';
 
 // MySQL bağlantı havuzu oluştur
-const pool = mysql.createPool(getDatabaseConfig());
+import { pool } from '@/lib/mysql';
 
 export async function GET(request) {
   try {
     // Comments tablosunu başlat
-    await initializeCommentsTable();
     
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');

@@ -194,4 +194,11 @@
   .blogContent {
     padding: 1rem;
   }
-} 
+}
+.searchForm { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin: 1.5rem 0 2rem; }
+.searchForm > div { display: flex; flex-direction: column; gap: .4rem; flex: 1; min-width: 180px; }
+.searchForm label { font-size: .85rem; color: var(--text-secondary); }
+.searchForm input, .searchForm select, .searchForm button { padding: .75rem 1rem; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); color: var(--text-primary); font: inherit; }
+.searchForm button { background: var(--accent-color); color: white; cursor: pointer; }
+.tagLinks { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0 1.5rem 1.2rem; }
+.tagLinks a { padding: .3rem .6rem; border: 1px solid var(--border-color); border-radius: 999px; color: var(--accent-color); font-size: .8rem; }

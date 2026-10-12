@@ -1,4 +1,4 @@
-import { initializeGalleryTable } from '../lib/mysql-gallery.js';
+import { initializeGalleryTable } from '../../lib/mysql-gallery.js';
 
 console.log('🚀 MySQL Gallery tablosu oluşturuluyor...');
 

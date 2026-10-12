@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import CodeBlock from './CodeBlock';
+import { rehypeHeadingIds } from '@/lib/markdown-headings';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -36,7 +37,8 @@ function parseImageTitle(title) {
       return accumulator;
     }
 
-    const value = decodeURIComponent(rawValue.replace(/\+/g, '%20'));
+    let value = rawValue;
+    try { value = decodeURIComponent(rawValue.replace(/\+/g, '%20')); } catch { /* Geçersiz URI metnini olduğu gibi göster. */ }
     accumulator[key] = value;
     return accumulator;
   }, {});
@@ -144,7 +146,8 @@ const CustomMarkdown = ({ content }) => {
     a: ({ node, ...props }) => {
       const href = props.href || '#';
       // Check if it's an external link
-      const isExternal = href.startsWith('http') && !href.includes(process.env.NEXT_PUBLIC_SITE_URL);
+      const siteHost = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://sametanaz.space').hostname;
+      const isExternal = /^https?:/.test(href) && new URL(href).hostname !== siteHost;
       
       return isExternal ? (
         <a 
@@ -170,24 +173,7 @@ const CustomMarkdown = ({ content }) => {
     ),
 
     // Blok düzeni pre içinde kalır; code tek başına satır içi kodu gösterir.
-    pre: ({ node, children, ...props }) => {
-      const codeNode = node.children.find(child => child.tagName === 'code');
-      const match = /language-(\S+)/.exec(codeNode?.properties?.className?.join(' ') || '');
-      return (
-        <div className={styles.codeContainer}>
-          {match && (
-            <div className={styles.codeHeader}>
-              <span>{match[1]}</span>
-            </div>
-          )}
-          <pre className={styles.pre} {...props}>
-            {React.Children.map(children, child => React.isValidElement(child)
-              ? React.cloneElement(child, { isBlock: true })
-              : child)}
-          </pre>
-        </div>
-      );
-    },
+    pre: CodeBlock,
     code: ({ node, isBlock = false, className, children, ...props }) => (
       <code className={`${className || ''} ${isBlock ? styles.code : styles.inlineCode}`.trim()} {...props}>
         {children}
@@ -200,7 +186,7 @@ const CustomMarkdown = ({ content }) => {
       <ReactMarkdown
         components={customComponents}
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight, rehypeUnwrapImages]}
+        rehypePlugins={[rehypeHighlight, rehypeUnwrapImages, rehypeHeadingIds]}
       >
         {content}
       </ReactMarkdown>

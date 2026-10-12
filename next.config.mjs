@@ -17,15 +17,6 @@ const nextConfig = {
       },
     ],
   },
-  // Hot Module Replacement'i daha güvenli çalıştırma
-  webpack: (config, { dev, isServer }) => {
-    // Sadece geliştirme modunda ve tarayıcı tarafında ise
-    if (dev && !isServer) {
-      // HMR iyileştirmeleri
-      config.optimization.runtimeChunk = 'single';
-    }
-    return config;
-  },
 };
 
 export default nextConfig;

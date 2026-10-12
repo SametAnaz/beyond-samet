@@ -1,135 +1,30 @@
-import { getPostBySlug, getAllPosts } from '@/lib/mysql-posts';
-import styles from '../../../styles/blog/post.module.css';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { getPublishedPost, relatedPosts } from '@/lib/posts-query';
+import { pool } from '@/lib/mysql';
+import { readingMinutes } from '@/lib/post-utils';
+import { siteUrl } from '@/lib/site';
+import styles from '@/styles/blog/post.module.css';
 import CommentSection from '../components/CommentSection';
 import PostContent from '../components/PostContent';
-
-export const revalidate = 300; // Her 5 dakikada verileri yeniden çek
-
-// MySQL'den direkt post verisi çek
-async function getPostWithComments(slug) {
-  try {
-    const result = await getPostBySlug(slug);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-    return result;
-  } catch (error) {
-    console.error('Error fetching post:', error);
-    throw error;
-  }
-}
-
-// Post'ların slug'larını çek (static generation için)
-async function getAllPostSlugs() {
-  try {
-    const result = await getAllPosts();
-    if (!result.success) {
-      return [];
-    }
-    
-    // Sadece yayınlanmış postları döndür
-    const publishedPosts = result.posts.filter(post => post.published === 1);
-    return publishedPosts.map(post => ({ slug: post.slug }));
-  } catch (error) {
-    console.error('Error fetching post slugs:', error);
-    return [];
-  }
-}
-
-export async function generateStaticParams() {
-  const paths = await getAllPostSlugs();
-  return paths;
-}
-
+export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }) {
-  // In Next.js 15, params may be wrapped in a promise
-  const resolvedParams = await Promise.resolve(params);
-  const slug = resolvedParams.slug;
-  
-  try {
-    const { post } = await getPostWithComments(slug);
-    return {
-      title: post.title,
-      description: post.excerpt,
-      openGraph: {
-        title: post.title,
-        description: post.excerpt,
-        type: 'article',
-        authors: [post.author],
-        publishedTime: new Date(post.createdAt).toISOString(),
-      },
-    };
-  } catch (error) {
-    return {
-      title: 'Blog Yazısı Bulunamadı',
-      description: 'Aradığınız blog yazısı bulunamadı veya kaldırılmış olabilir.'
-    };
-  }
+  const { slug } = await params;
+  const post = await getPublishedPost(slug);
+  if (!post) notFound();
+  const description = post.metaDescription || post.excerpt;
+  return { title: post.title, description, alternates: { canonical: `/blog/${slug}` }, openGraph: { title: post.title, description, type: 'article', url: `${siteUrl}/blog/${slug}`, authors: [post.author], publishedTime: new Date(post.createdAt).toISOString(), modifiedTime: new Date(post.updatedAt).toISOString() }, twitter: { card: 'summary_large_image', title: post.title, description } };
 }
-
-// Serialize MySQL data to ensure it's safe to pass to client components
-function serializePost(post) {
-  return {
-    slug: post.slug,
-    title: post.title,
-    author: post.author,
-    content: post.content || '',
-    contentHtml: post.contentHtml || '',
-    excerpt: post.excerpt || '',
-    // Convert date objects to ISO strings
-    date: new Date(post.createdAt).toISOString(),
-    // Convert updatedAt to ISO string if it exists
-    updatedAt: post.updatedAt ? 
-               new Date(post.updatedAt).toISOString() : 
-               new Date().toISOString()
-  };
+export default async function BlogPost({ params }) {
+  const { slug } = await params;
+  const post = await getPublishedPost(slug);
+  if (!post) notFound();
+  const [related, [comments]] = await Promise.all([relatedPosts(post), pool.execute('SELECT id, name, content AS comment, createdAt AS created_at FROM comments WHERE slug=? AND approved=1 ORDER BY createdAt DESC', [slug])]);
+  const structured = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title, description: post.metaDescription || post.excerpt, datePublished: new Date(post.createdAt).toISOString(), dateModified: new Date(post.updatedAt).toISOString(), author: { '@type': 'Person', name: post.author }, mainEntityOfPage: `${siteUrl}/blog/${slug}`, image: `${siteUrl}/blog/${slug}/opengraph-image` };
+  return <div className={styles.container}>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, '\\u003c') }} />
+    <article className={styles.article}><header className={styles.header}><h1 className={styles.title}>{post.title}</h1><div className={styles.meta}><span className={styles.author}>{post.author}</span><time dateTime={new Date(post.createdAt).toISOString()} className={styles.date}>{new Date(post.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</time><span>{post.readingTime || readingMinutes(post.content)} dk okuma</span></div>{post.tags.length > 0 && <p>{post.tags.map(tag => <Link key={tag} href={`/blog?tag=${encodeURIComponent(tag)}`} style={{ marginRight: '1rem' }}>{tag}</Link>)}</p>}</header><PostContent post={{ content: post.content }} /></article>
+    {related.length > 0 && <aside className={styles.relatedPosts}><h2>İlgili yazılar</h2>{related.map(item => <Link key={item.slug} href={`/blog/${item.slug}`}>{item.title} →</Link>)}</aside>}
+    <CommentSection slug={slug} initialComments={JSON.parse(JSON.stringify(comments))} />
+  </div>;
 }
-
-// Main blog post component (Server Component)
-export default async function BlogPost(props) {
-  // In Next.js 15, params may be wrapped in a promise
-  const resolvedParams = await Promise.resolve(props.params);
-  const slug = resolvedParams.slug;
-  
-  try {
-    const { post, comments } = await getPostWithComments(slug);
-    const serializedPost = serializePost(post);
-    
-    const formattedDate = new Date(serializedPost.date).toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-
-    return (
-      <div className={styles.container}>
-        <article className={styles.article}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>{serializedPost.title}</h1>
-            <div className={styles.meta}>
-              <span className={styles.author}>{serializedPost.author}</span>
-              <time dateTime={serializedPost.date} className={styles.date}>
-                {formattedDate}
-              </time>
-            </div>
-          </header>
-
-          <PostContent post={serializedPost} />
-        </article>
-        
-        <div className={styles.divider}></div>
-        
-        <CommentSection slug={slug} initialComments={comments} />
-      </div>
-    );
-  } catch (error) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.errorMessage}>
-          <h1>Blog Yazısı Bulunamadı</h1>
-          <p>Aradığınız blog yazısı bulunamadı veya kaldırılmış olabilir.</p>
-        </div>
-      </div>
-    );
-  }
-} 

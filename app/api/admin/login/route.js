@@ -1,3 +1,6 @@
+import { NextResponse } from 'next/server';
+import { createSession, SESSION_COOKIE, sessionCookieOptions, sameOrigin } from '@/lib/auth';
+import { limitRequest } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
 function getRequiredEnv(name) {
@@ -22,9 +25,13 @@ function safeCompare(input, expected) {
 }
 
 export async function POST(request) {
+  if (!sameOrigin(request)) return Response.json({ error: 'İstek kaynağı doğrulanamadı' }, { status: 403 });
+  const limited = limitRequest(request, 'login', { limit: 10, windowMs: 15 * 60_000 });
+  if (limited) return limited;
   try {
     const { username = '', password = '' } = await request.json();
 
+    if (typeof username !== 'string' || typeof password !== 'string' || username.length > 255 || password.length > 1024) return Response.json({ success: false, error: 'Giriş bilgileri geçersiz' }, { status: 400 });
     const adminUsername = getRequiredEnv('ADMIN_USERNAME');
     const adminPassword = getRequiredEnv('ADMIN_PASSWORD');
 
@@ -38,7 +45,9 @@ export async function POST(request) {
       );
     }
 
-    return Response.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.set(SESSION_COOKIE, createSession(adminUsername), sessionCookieOptions());
+    return response;
   } catch (error) {
     console.error('Admin login error:', error);
     return Response.json(

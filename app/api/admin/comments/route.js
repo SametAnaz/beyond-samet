@@ -1,14 +1,13 @@
-import mysql from 'mysql2/promise';
-import { initializeCommentsTable } from '@/lib/mysql-posts';
-import { getDatabaseConfig } from '@/lib/mysql-config';
+import { requireAdmin } from '@/lib/auth';
 
 // MySQL bağlantı havuzu oluştur
-const pool = mysql.createPool(getDatabaseConfig());
+import { pool } from '@/lib/mysql';
 
 export async function GET(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     // Comments tablosunu başlat
-    await initializeCommentsTable();
     
     // Tüm yorumları getir (admin için tüm yorumlar görünür)
     const [comments] = await pool.execute(

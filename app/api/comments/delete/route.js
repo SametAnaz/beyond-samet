@@ -1,7 +1,10 @@
+import { requireAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { pool } from '@/lib/mysql-posts';
 
 export async function DELETE(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const data = await request.json();
     
@@ -14,14 +17,11 @@ export async function DELETE(request) {
     }
     
     // Yorumu MySQL'den sil
-    const connection = await pool.getConnection();
     
-    const [result] = await connection.execute(
+    const [result] = await pool.execute(
       'DELETE FROM comments WHERE id = ?',
       [data.commentId]
     );
-    
-    connection.release();
     
     if (result.affectedRows === 0) {
       return NextResponse.json(
@@ -43,4 +43,4 @@ export async function DELETE(request) {
       { status: 500 }
     );
   }
-} 
+}

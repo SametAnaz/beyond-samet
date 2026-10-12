@@ -8,17 +8,12 @@ export const metadata = {
 };
 
 async function getGalleryImages() {
-  try {
-    const result = await getAllGalleryImages();
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-    return result.images || [];
-  } catch (error) {
-    console.error('Error fetching gallery images:', error);
-    return [];
-  }
+  const result = await getAllGalleryImages();
+  if (!result.success) throw new Error('Galeri yüklenemedi');
+  return result.images;
 }
+
+export const dynamic = 'force-dynamic';
 
 export default async function GalleryPage() {
   const images = await getGalleryImages();

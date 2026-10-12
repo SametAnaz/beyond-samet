@@ -1,5 +1,8 @@
 'use client';
 
+import usePostDraft from '@/hooks/usePostDraft';
+import { slugify } from '@/lib/post-utils';
+
 import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -20,7 +23,10 @@ export default function EditPost({ params }) {
     author: '',
     excerpt: '',
     content: '',
-    slug: ''
+    slug: '',
+    tags: '',
+    featured: false,
+    metaDescription: ''
   });
   const [contentLoading, setContentLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -29,6 +35,8 @@ export default function EditPost({ params }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showImageSelector, setShowImageSelector] = useState(false);
 
+  const draft = usePostDraft(`beyond-edit-${id}`, formData, setFormData, { ready: !contentLoading, postId: id, canSaveDraft: post?.published === 0 });
+
   useEffect(() => {
     async function loadPost() {
       try {
@@ -36,7 +44,7 @@ export default function EditPost({ params }) {
         console.log(`Edit page: ${id} ID'li blog yazısı yükleniyor...`);
         
         // MySQL API'den post'u al - önce tüm post'ları çek, sonra ID ile filtrele
-        const response = await fetch('/api/posts', {
+        const response = await fetch(`/api/admin/posts/${encodeURIComponent(id)}`, {
           cache: 'no-store'
         });
         
@@ -45,7 +53,7 @@ export default function EditPost({ params }) {
         }
         
         const data = await response.json();
-        const postData = data.posts.find(p => p.id === id);
+        const postData = data.post;
         
         if (!postData) {
           throw new Error('Blog yazısı bulunamadı');
@@ -59,7 +67,10 @@ export default function EditPost({ params }) {
           author: postData.author || '',
           excerpt: postData.excerpt || '',
           content: postData.content || '',
-          slug: postData.slug || ''
+          slug: postData.slug || '',
+          tags: (postData.tags || []).join(', '),
+          featured: Boolean(postData.featured),
+          metaDescription: postData.metaDescription || ''
         });
       } catch (error) {
         console.error('Blog yazısı yüklenirken hata:', error);
@@ -223,11 +234,13 @@ export default function EditPost({ params }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const publish = e.nativeEvent.submitter?.value === 'publish';
     setSaveLoading(true);
+    await draft.waitForSave();
     setAlert({ show: false, type: '', message: '' });
 
     try {
-      if (!formData.title || !formData.author || !formData.content) {
+      if (!formData.title || (publish && !formData.content)) {
         throw new Error('Lütfen gerekli alanları doldurun.');
       }
       
@@ -244,7 +257,11 @@ export default function EditPost({ params }) {
           author: formData.author,
           excerpt: formData.excerpt || formData.title,
           content: formData.content, // Original markdown content
-          slug: formData.slug
+          slug: slugify(formData.slug || formData.title),
+          published: publish,
+          featured: formData.featured,
+          tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+          metaDescription: formData.metaDescription
         }),
       });
 
@@ -253,6 +270,7 @@ export default function EditPost({ params }) {
         throw new Error(errorData.error || 'Blog yazısı güncellenemedi');
       }
 
+      draft.markSaved();
       setAlert({
         show: true,
         type: 'success',
@@ -271,6 +289,7 @@ export default function EditPost({ params }) {
         message: `Hata: ${error.message}`
       });
     } finally {
+      draft.resumeAutosave();
       setSaveLoading(false);
     }
   };
@@ -292,7 +311,7 @@ export default function EditPost({ params }) {
           </button>
         </div>
         <ul className="admin-nav">
-          <div className="admin-nav-section">Ana Menü</div>
+          <li className="admin-nav-section">Ana Menü</li>
           <li>
             <Link href="/admin">
               <span className="admin-nav-icon">📊</span>
@@ -362,7 +381,7 @@ export default function EditPost({ params }) {
             
             <div className="admin-card-body">
               {!previewMode ? (
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit}><fieldset className="editor-fields" disabled={saveLoading}>
                   <div className="form-group">
                     <label htmlFor="title">Başlık *</label>
                     <input
@@ -377,7 +396,7 @@ export default function EditPost({ params }) {
                   </div>
                   
                   <div className="form-group">
-                    <label htmlFor="author">Yazar *</label>
+                    <label htmlFor="author">Yazar</label>
                     <input
                       type="text"
                       id="author"
@@ -385,7 +404,6 @@ export default function EditPost({ params }) {
                       className="form-control"
                       value={formData.author}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                   
@@ -485,7 +503,6 @@ export default function EditPost({ params }) {
                       value={formData.content}
                       onChange={handleChange}
                       onKeyDown={handleEditorKeyDown}
-                      required
                       rows="18"
                       placeholder="Markdown formatında yazınızı buraya yazın..."
                     />
@@ -503,9 +520,20 @@ export default function EditPost({ params }) {
                     </div>
                   </div>
                   
-                  <div className="form-submit">
+                  <div className="form-group">
+                  <label htmlFor="tags">Etiketler</label>
+                  <input id="tags" name="tags" className="form-control" value={formData.tags} onChange={handleChange} placeholder="Backend, AI, DevOps" />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="metaDescription">Arama motoru açıklaması</label>
+                  <textarea id="metaDescription" name="metaDescription" className="form-control" value={formData.metaDescription} onChange={handleChange} maxLength={500} rows={2} />
+                </div>
+                <label><input type="checkbox" checked={formData.featured} onChange={e => setFormData(current => ({ ...current, featured: e.target.checked }))} /> Öne çıkan yazı</label>
+                <p role="status" aria-live="polite">{draft.status}</p>
+                <div className="form-submit">
                     <button 
-                      type="submit" 
+                      type="submit"
+                    value="publish"
                       className="admin-btn btn-primary btn-lg"
                       disabled={saveLoading}
                     >
@@ -517,12 +545,13 @@ export default function EditPost({ params }) {
                       ) : (
                         <>
                           <span>💾</span>
-                          Değişiklikleri Kaydet
+                          Yazıyı Yayınla
                         </>
                       )}
                     </button>
-                  </div>
-                </form>
+                  <button type="submit" value="draft" className="admin-btn btn-secondary btn-lg" disabled={saveLoading}>{post?.published ? 'Yayından Kaldır ve Taslak Kaydet' : 'Taslak Kaydet'}</button>
+                </div>
+                </fieldset></form>
               ) : (
                 <div className="markdown-preview">
                   <div className="preview-shell">

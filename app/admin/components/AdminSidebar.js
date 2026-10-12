@@ -31,7 +31,7 @@ export default function AdminSidebar() {
         </button>
       </div>
       <ul className="admin-nav">
-        <div className="admin-nav-section">Ana Menü</div>
+        <li className="admin-nav-section">Ana Menü</li>
         {menuItems.map((item) => (
           <li key={item.href}>
             <Link 

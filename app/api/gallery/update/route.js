@@ -1,7 +1,10 @@
+import { requireAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { updateImageMetadata } from '../../../../lib/mysql-gallery';
 
 export async function PUT(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const { id, title, description, order } = await request.json();
     

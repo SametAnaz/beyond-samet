@@ -1,48 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPosts: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  async function fetchPostsDirectly() {
+  const fetchPostsDirectly = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // MySQL API'den tüm post'ları al
-      const response = await fetch('/api/posts', {
+      const response = await fetch(`/api/posts?admin=true&limit=20&page=${page}`, {
         cache: 'no-store'
       });
-      
+
       if (!response.ok) {
         throw new Error('Postlari yuklerken hata olustu');
       }
-      
+
       const data = await response.json();
-      
+      setPagination(data.pagination);
+
       if (!data.posts || data.posts.length === 0) {
         console.log("Hiç blog yazısı bulunamadı");
         setPosts([]);
         return;
       }
-      
+
       const postsList = data.posts.map(post => {
-        console.log("Blog yazısı:", post.id, post);
-        
+
+
         // Tarih formatla
         const createdAtDate = post.createdAt ? new Date(post.createdAt) : null;
-        
+
         return {
           id: post.id,
           ...post,
           formattedDate: createdAtDate ? createdAtDate.toLocaleDateString('tr-TR') : '-'
         };
       });
-      
+
       console.log("Toplam bulunan blog yazısı:", postsList.length);
       setPosts(postsList);
     } catch (error) {
@@ -55,27 +58,27 @@ export default function AdminPosts() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [page]);
 
   useEffect(() => {
     fetchPostsDirectly();
-  }, []);
+  }, [fetchPostsDirectly]);
 
   const handleDelete = async (postId) => {
     if (!window.confirm('Bu blog yazısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
       return;
     }
-    
+
     try {
       // MySQL API ile sil
       const response = await fetch(`/api/posts?id=${postId}`, {
         method: 'DELETE'
       });
-      
+
       if (!response.ok) {
         throw new Error('Post silinirken hata olustu');
       }
-      
+
       setAlert({
         show: true,
         type: 'success',
@@ -109,7 +112,7 @@ export default function AdminPosts() {
           </button>
         </div>
         <ul className="admin-nav">
-          <div className="admin-nav-section">Ana Menü</div>
+          <li className="admin-nav-section">Ana Menü</li>
           <li>
             <Link href="/admin">
               <span className="admin-nav-icon">📊</span>
@@ -136,7 +139,7 @@ export default function AdminPosts() {
           </li>
         </ul>
       </div>
-      
+
       <div className="admin-content">
         <div className="admin-header">
           <div className="admin-title">
@@ -152,14 +155,14 @@ export default function AdminPosts() {
             </button>
           </div>
         </div>
-        
+
         {alert.show && (
           <div className={`alert ${alert.type === 'success' ? 'alert-success' : 'alert-error'}`}>
             <span>{alert.type === 'success' ? '✅' : '❌'}</span>
             {alert.message}
           </div>
         )}
-        
+
         {loading ? (
           <div className="loading">
             <div className="loading-spinner"></div>
@@ -169,9 +172,9 @@ export default function AdminPosts() {
           <div className="admin-card">
             <div className="admin-card-header">
               <div className="admin-card-title">Tüm Blog Yazıları</div>
-              <div>{posts.length} yazı bulundu</div>
+              <div>{pagination.totalPosts} yazı bulundu</div>
             </div>
-            
+
             <div className="admin-table-container">
               <table className="admin-table">
                 <thead>
@@ -212,26 +215,26 @@ export default function AdminPosts() {
                         <td className="truncate hide-mobile">{post.slug || post.id}</td>
                         <td className="hide-mobile">{post.formattedDate}</td>
                         <td className="hide-mobile">
-                          <span className="status-published">Yayında</span>
+                          <span className={post.published ? "status-published" : "status-draft"}>{post.published ? "Yayında" : "Taslak"}</span>
                         </td>
                         <td>
                           <div className="flex-center gap-2 mobile-actions">
-                            <Link 
+                            <Link
                               href={`/admin/posts/edit/${post.id || post.slug}`}
                               className="admin-btn btn-primary btn-sm"
                             >
                               <span className="btn-icon">✏️</span>
                               <span className="btn-text hide-mobile">Düzenle</span>
                             </Link>
-                            <Link 
+                            {Boolean(post.published) && <Link
                               href={`/blog/${post.slug || post.id}`}
                               target="_blank"
                               className="admin-btn btn-secondary btn-sm"
                             >
                               <span className="btn-icon">👁️</span>
                               <span className="btn-text hide-mobile">Görüntüle</span>
-                            </Link>
-                            <button 
+                            </Link>}
+                            <button
                               className="admin-btn btn-danger btn-sm"
                               onClick={() => handleDelete(post.id || post.slug)}
                             >
@@ -246,9 +249,14 @@ export default function AdminPosts() {
                 </tbody>
               </table>
             </div>
+            <nav className="admin-actions" aria-label="Yazı sayfaları">
+              <button className="admin-btn btn-secondary" disabled={!pagination.hasPrevious} onClick={() => setPage(Math.max(1, pagination.currentPage - 1))}>Önceki</button>
+              <span>{pagination.currentPage || 1} / {pagination.totalPages || 1}</span>
+              <button className="admin-btn btn-secondary" disabled={!pagination.hasNext} onClick={() => setPage(pagination.currentPage + 1)}>Sonraki</button>
+            </nav>
           </div>
         )}
       </div>
     </div>
   );
-} 
+}

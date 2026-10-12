@@ -1,64 +1,32 @@
+import { listPosts, getPostById } from '@/lib/posts-query';
+import { normalizePost } from '@/lib/post-utils';
+import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import { getAllPosts, addPost, updatePost, deletePost, initializePostsTable } from '@/lib/mysql-posts';
+import { getAllPosts, addPost, updatePost, deletePost } from '@/lib/mysql-posts';
 
 export async function GET(request) {
+  const params = new URL(request.url).searchParams;
+  const admin = params.get('admin') === 'true';
+  if (admin) { const denied = requireAdmin(request); if (denied) return denied; }
   try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 10;
-    const published = searchParams.get('published');
-    
-    const result = await getAllPosts();
-    
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Blog yazıları yüklenemedi' },
-        { status: 500 }
-      );
-    }
-    
-    let posts = result.posts;
-    
-    // Published filter
-    if (published !== null) {
-      const isPublished = published === 'true';
-      posts = posts.filter(post => (isPublished ? post.published === 1 : post.published === 0));
-    }
-    
-    // Pagination
-    const totalPosts = posts.length;
-    const totalPages = Math.ceil(totalPosts / limit);
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedPosts = posts.slice(startIndex, endIndex);
-    
-    return NextResponse.json({
-      posts: paginatedPosts,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalPosts,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1
-      }
-    });
-    
+    const data = await listPosts({ page: params.get('page'), limit: params.get('limit'), query: params.get('q') || '', tag: params.get('tag') || '', admin, published: admin && params.has('published') ? params.get('published') === 'true' : undefined });
+    return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Posts API error:', error);
-    return NextResponse.json(
-      { error: 'Blog yazıları yüklenirken hata oluştu' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Blog yazıları yüklenemedi' }, { status: 503 });
   }
 }
 
 // POST - Yeni blog yazısı ekle
 export async function POST(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     // Tabloyu başlat
-    await initializePostsTable();
     
-    const postData = await request.json();
+    let postData;
+    try { postData = normalizePost(await request.json()); } catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }
     
     // Gerekli alanları kontrol et
     if (!postData.title || !postData.slug) {
@@ -80,7 +48,7 @@ export async function POST(request) {
       author: postData.author || 'Samet Anaz',
       tags: Array.isArray(postData.tags) ? postData.tags : [],
       metaDescription: postData.metaDescription || '',
-      readingTime: postData.readingTime || 0,
+      readingTime: postData.readingTime,
       views: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -95,6 +63,7 @@ export async function POST(request) {
       );
     }
     
+    invalidatePost(newPost.slug);
     return NextResponse.json({
       success: true,
       post: newPost,
@@ -112,6 +81,8 @@ export async function POST(request) {
 
 // PUT - Blog yazısı güncelle
 export async function PUT(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -123,7 +94,11 @@ export async function PUT(request) {
       );
     }
     
-    const updateData = await request.json();
+    let updateData;
+    try { updateData = normalizePost(await request.json(), { partial: true }); } catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }
+    const existing = await getPostById(id);
+    if (!existing) return NextResponse.json({ error: 'Blog yazısı bulunamadı' }, { status: 404 });
+    if ((updateData.published ?? existing.published) && !(updateData.content ?? existing.content).trim()) return NextResponse.json({ error: 'Yayınlamak için içerik gerekli' }, { status: 400 });
     
     // updatedAt'i güncelle
     updateData.updatedAt = new Date().toISOString();
@@ -137,6 +112,8 @@ export async function PUT(request) {
       );
     }
     
+    invalidatePost(existing.slug);
+    if (updateData.slug) invalidatePost(updateData.slug);
     return NextResponse.json({
       success: true,
       message: 'Blog yazısı başarıyla güncellendi'
@@ -153,6 +130,8 @@ export async function PUT(request) {
 
 // DELETE - Blog yazısı sil
 export async function DELETE(request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -164,6 +143,7 @@ export async function DELETE(request) {
       );
     }
     
+    const existing = await getPostById(id);
     const result = await deletePost(id);
     
     if (!result.success) {
@@ -173,6 +153,7 @@ export async function DELETE(request) {
       );
     }
     
+    invalidatePost(existing?.slug);
     return NextResponse.json({
       success: true,
       message: 'Blog yazısı başarıyla silindi'
@@ -185,4 +166,9 @@ export async function DELETE(request) {
       { status: 500 }
     );
   }
+}
+
+function invalidatePost(slug) {
+  for (const path of ['/', '/blog', '/projects', '/sitemap.xml']) revalidatePath(path);
+  if (slug) revalidatePath(`/blog/${slug}`);
 }

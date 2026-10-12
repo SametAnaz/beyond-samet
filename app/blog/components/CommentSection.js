@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import styles from '../../../styles/blog/CommentSection.module.css';
 
-export default function CommentSection({ slug }) {
-  const [comments, setComments] = useState([]);
+export default function CommentSection({ slug, initialComments = [] }) {
+  const [comments, setComments] = useState(initialComments);
   const [newComment, setNewComment] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +21,7 @@ export default function CommentSection({ slug }) {
           const data = await response.json();
           setComments(data.comments || []);
         } else {
-          console.error('Yorumlar yüklenirken hata:', response.statusText);
+          setError('Yorumlar yüklenemedi. Lütfen tekrar deneyin.');
         }
       } catch (error) {
         console.error('Yorumlar yüklenirken hata:', error);
@@ -79,7 +79,7 @@ export default function CommentSection({ slug }) {
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Yorum gönderilirken bir hata oluştu.');
+        setError(errorData.error || errorData.message || 'Yorum gönderilirken bir hata oluştu.');
       }
     } catch (error) {
       console.error('Yorum gönderme hatası:', error);

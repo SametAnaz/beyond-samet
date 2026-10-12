@@ -1,5 +1,8 @@
 'use client';
 
+import usePostDraft from '@/hooks/usePostDraft';
+import { slugify } from '@/lib/post-utils';
+
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -16,13 +19,18 @@ export default function NewPost() {
     author: '',
     excerpt: '',
     content: '',
-    slug: ''
+    slug: '',
+    tags: '',
+    featured: false,
+    metaDescription: ''
   });
   const [saveLoading, setSaveLoading] = useState(false);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [previewMode, setPreviewMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showImageSelector, setShowImageSelector] = useState(false);
+
+  const draft = usePostDraft('beyond-new-post', formData, setFormData);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -161,20 +169,23 @@ export default function NewPost() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const publish = e.nativeEvent.submitter?.value === 'publish';
     setSaveLoading(true);
+    await draft.waitForSave();
     setAlert({ show: false, type: '', message: '' });
 
     try {
-      if (!formData.title || !formData.author || !formData.content) {
+      if (!formData.title || (publish && !formData.content)) {
         throw new Error('Lütfen gerekli alanları doldurun.');
       }
 
       console.log('Yeni blog yazısı veritabanına kaydediliyor.');
-      const slug = formData.slug ? formData.slug.trim() : '';
+      const slug = slugify(formData.slug || formData.title);
       
       // MySQL API'sine gönder
-      const response = await fetch('/api/posts', {
-        method: 'POST',
+      const existingId = draft.getId();
+      const response = await fetch(existingId ? `/api/posts?id=${encodeURIComponent(existingId)}` : '/api/posts', {
+        method: existingId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -184,8 +195,10 @@ export default function NewPost() {
           excerpt: formData.excerpt || formData.title,
           content: formData.content, // Original markdown content
           slug: slug,
-          published: true, // Varsayılan olarak yayınlansın
-          featured: false
+          published: publish,
+          featured: formData.featured,
+          tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+          metaDescription: formData.metaDescription
         }),
       });
 
@@ -194,10 +207,11 @@ export default function NewPost() {
         throw new Error(responseData.error || 'Blog yazısı kaydedilemedi');
       }
 
+      draft.markSaved();
       setAlert({
         show: true,
         type: 'success',
-        message: 'Blog yazısı başarıyla oluşturuldu!'
+        message: publish ? 'Yazı yayınlandı!' : 'Taslak kaydedildi!'
       });
       
       // 2 saniye sonra blog yazıları listesine geri dön
@@ -212,6 +226,7 @@ export default function NewPost() {
         message: `Hata: ${error.message}`
       });
     } finally {
+      draft.resumeAutosave();
       setSaveLoading(false);
     }
   };
@@ -246,7 +261,7 @@ export default function NewPost() {
           </button>
         </div>
         <ul className="admin-nav">
-          <div className="admin-nav-section">Ana Menü</div>
+          <li className="admin-nav-section">Ana Menü</li>
           <li>
             <Link href="/admin">
               <span className="admin-nav-icon">📊</span>
@@ -311,7 +326,7 @@ export default function NewPost() {
           
           <div className="admin-card-body">
             {!previewMode ? (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit}><fieldset className="editor-fields" disabled={saveLoading}>
                 <div className="form-group">
                   <label htmlFor="title">Başlık *</label>
                   <input
@@ -348,12 +363,12 @@ export default function NewPost() {
                   </div>
                   <div className="form-help">
                     <span className="form-help-icon">ℹ️</span>
-                    <span>Yazınızın URL'de görünecek kısmı. Boş bırakırsanız otomatik oluşturulur.</span>
+                    <span>Yazınızın URL’de görünecek kısmı. Boş bırakırsanız otomatik oluşturulur.</span>
                   </div>
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="author">Yazar *</label>
+                  <label htmlFor="author">Yazar</label>
                   <input
                     type="text"
                     id="author"
@@ -361,7 +376,6 @@ export default function NewPost() {
                     className="form-control"
                     value={formData.author}
                     onChange={handleChange}
-                    required
                   />
                 </div>
                 
@@ -461,7 +475,6 @@ export default function NewPost() {
                     value={formData.content}
                     onChange={handleChange}
                     onKeyDown={handleEditorKeyDown}
-                    required
                     rows="18"
                     placeholder="Markdown formatında yazınızı buraya yazın..."
                   />
@@ -479,9 +492,20 @@ export default function NewPost() {
                   </div>
                 </div>
                 
+                <div className="form-group">
+                  <label htmlFor="tags">Etiketler</label>
+                  <input id="tags" name="tags" className="form-control" value={formData.tags} onChange={handleChange} placeholder="Backend, AI, DevOps" />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="metaDescription">Arama motoru açıklaması</label>
+                  <textarea id="metaDescription" name="metaDescription" className="form-control" value={formData.metaDescription} onChange={handleChange} maxLength={500} rows={2} />
+                </div>
+                <label><input type="checkbox" checked={formData.featured} onChange={e => setFormData(current => ({ ...current, featured: e.target.checked }))} /> Öne çıkan yazı</label>
+                <p role="status" aria-live="polite">{draft.status}</p>
                 <div className="form-submit">
                   <button 
-                    type="submit" 
+                    type="submit"
+                    value="publish"
                     className="admin-btn btn-primary btn-lg"
                     disabled={saveLoading}
                   >
@@ -497,8 +521,9 @@ export default function NewPost() {
                       </>
                     )}
                   </button>
+                <button type="submit" value="draft" className="admin-btn btn-secondary btn-lg" disabled={saveLoading}>Taslak Kaydet</button>
                 </div>
-              </form>
+              </fieldset></form>
             ) : (
               <div className="markdown-preview">
                 <div className="preview-shell">

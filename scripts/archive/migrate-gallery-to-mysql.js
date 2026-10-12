@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { list } from "@vercel/blob";
-import { addImageMetadata } from '../lib/mysql-gallery.js';
+import { addImageMetadata } from '../../lib/mysql-gallery.js';
 
 // Load environment variables
 config({ path: '.env.local' });

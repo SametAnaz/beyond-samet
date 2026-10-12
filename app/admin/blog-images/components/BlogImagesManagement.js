@@ -24,7 +24,7 @@ export default function BlogImagesManagement() {
       // Resimler ve postları paralel yükle
       const [imagesRes, postsRes] = await Promise.all([
         fetch('/api/blog/images'),
-        fetch('/api/posts')
+        fetch('/api/posts?admin=true&limit=100')
       ]);
       
       const imagesData = await imagesRes.json();

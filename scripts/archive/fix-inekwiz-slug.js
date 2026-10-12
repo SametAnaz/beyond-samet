@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { pool } from '../lib/mysql-posts.js';
+import { pool } from '../../lib/mysql-posts.js';
 
 config({ path: '.env.local' });
 

@@ -1,4 +1,5 @@
 import { Inter } from 'next/font/google';
+import { siteUrl } from '@/lib/site';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from 'next-themes';
@@ -10,6 +11,9 @@ import '../styles/admin.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
+  metadataBase: new URL(siteUrl),
+  openGraph: { siteName: 'Beyond Samet', locale: 'tr_TR', type: 'website' },
+  twitter: { card: 'summary_large_image' },
   title: {
     template: '%s - Beyond Samet',
     default: 'Beyond Samet',
